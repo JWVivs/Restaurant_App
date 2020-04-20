@@ -1,0 +1,105 @@
+---
+title: "Map"
+author: "John Viviani"
+date: "4/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(leaflet)
+library(dplyr)
+library(stringr)
+```
+
+I'll use boston_add since it has the latitude and longitude for each restaurant, and then use df_boston to add information regarding the restaurant on each marker (e.g. name, address, cuisine, etc.). Likewise for Portland.
+
+# Reading in the data
+```{r}
+# boston_add contains the coordinates
+boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/boston_addresses.csv")
+# df_boston has the restaurant names and cuisine
+df_boston <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_boston.csv")
+# menu data
+boston_final <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/boston_final.csv")
+
+# portland_add contains the coordinates
+portland_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/portland_addresses.csv")
+# df_portland has the restaurant names and cuisine
+df_portland <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_portland.csv")
+# menu data
+portland_final <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/portland_final.csv")
+
+# charleston_add contains the coordinates
+charleston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/charleston_addresses.csv")
+# df_charleston has the restaurant names and cuisine
+df_charleston <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_charleston.csv")
+# menu data
+charleston_final <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/charleston_final.csv")
+
+```
+
+# Making a map of Boston
+```{r}
+boston_add %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(clusterOptions = markerClusterOptions(), 
+             popup = paste(df_boston$Restaurant, "<br>",
+                           df_boston$Cuisine, "<br>",
+                           df_boston$Address)) -> boston_map
+
+boston_map
+```
+
+Let's merge the Boston and Portland dfs together to make a collective map.
+
+# Making a map of Boston and Portland
+```{r}
+# binding df_boston and df_portland (contains restaurant info)
+df_combined <- rbind(df_boston, df_portland)
+
+# binding boston_add and portland_add (contains coordinates)
+test <- rbind(boston_add, portland_add)
+
+test %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(clusterOptions = markerClusterOptions(), 
+             popup = paste(df_combined$Restaurant, "<br>",
+                           df_combined$Cuisine, "<br>",
+                           df_combined$Address)) -> combined_map
+
+combined_map
+```
+
+# Making a map of Boston, Portland, and Charleston
+```{r}
+# binding each city's restaurant info
+df_3 <- rbind(df_boston, df_portland, df_charleston)
+
+# binding each city's coordinate info
+df_3_coord <- rbind(boston_add, portland_add, charleston_add)
+
+df_3_coord %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(clusterOptions = markerClusterOptions(), 
+             popup = paste(df_3$Restaurant, "<br>",
+                           df_3$Cuisine, "<br>",
+                           df_3$Address)) -> map_3_cities
+
+map_3_cities
+```
+
+
+```{r}
+### Trying to assign city and state their own unique column
+### for potential drop down menu selection in app
+
+# library(stringr)
+#df_combined$CityState <- str_extract(df_combined$Address, 'Boston, MA|Portland, ME')
+
+```
+

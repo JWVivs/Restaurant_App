@@ -1,0 +1,154 @@
+---
+title: "Boston"
+author: "John Viviani"
+date: "4/6/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(rvest)
+library(tidyr)
+```
+
+
+# Scraped Data from allmenus.com
+This data was scraped, then organized into a dataframe.
+I searched for seafood restaurants in Boston, MA.
+Used SelectorGadget (chrome extension) to get CSS elements.
+```{r}
+site <- read_html("https://www.allmenus.com/ma/boston/-/seafood/")
+
+# scraping the restaurant names
+site %>%
+  html_nodes(".name a") %>%
+  html_text() %>% 
+  as.data.frame() -> df_names
+
+# scraping the restaurant cuisines
+site %>%
+  html_nodes(".cousine-list") %>%
+  html_text() %>% 
+  as.data.frame() -> df_cuisine
+
+# scraping the address
+site %>%
+  html_nodes(".delivery+ .address") %>%
+  html_text() %>% 
+  as.data.frame() -> df_address
+
+# scraping the city, state, and zip
+site %>%
+  html_nodes(".address+ .address") %>%
+  html_text() %>%
+  as.data.frame() -> df_location
+
+# combining all of these into one data frame
+cbind(df_names, df_cuisine, df_address, df_location) -> df_boston
+
+# naming the columns
+names(df_boston) <- c("Restaurant", "Cuisine", "Address", "Location")
+
+# merge location and address columns together
+df_boston$Address <- paste(df_boston$Address, df_boston$Location)
+
+# dropping the old location column
+df_boston %>%
+  select(., -contains("Location")) -> df_boston
+
+# removing duplicated restaurants based on address
+df_boston <- subset(df_boston, !duplicated(df_boston[,3]))
+
+# saving for map usage later
+write.csv(df_boston, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_boston.csv")
+```
+
+
+# Scraping menu data (found once you click restaurant name link)
+Few different functions to get each item into its own list. Later converted to data frames and merged into one.
+```{r}
+s <- html_session("https://www.allmenus.com/ma/boston/-/seafood/")
+
+link <- as.vector(df_boston$Restaurant, mode = "character")
+n <- length(link) #number of pages
+# function to get each food item from each restaurant
+food <- list()
+for (i in 1:n){
+
+    s <- s %>% follow_link(link[i])
+    food[[(i)]] <- s %>% 
+      html_nodes(".item-title") %>%
+      html_text()
+    s <- s %>% back()}
+
+# converting list to a data frame
+sapply(food, '[', seq(max(sapply(food, length)))) -> food_df
+as.data.frame(food_df) -> food_df
+
+# adding names to each column
+names(food_df) <- link
+
+# function to get each price for each food item from each restaurant
+price <- list()
+for (i in 1:n){
+
+    s <- s %>% follow_link(link[i])
+    price[[(i)]] <- s %>% 
+      html_nodes(".item-price") %>%
+      html_text()
+    s <- s %>% back()}
+
+# converting list to a data frame
+sapply(price, '[', seq(max(sapply(price, length)))) -> price_df
+as.data.frame(price_df) -> price_df
+
+# adding names to each column
+names(price_df) <- link
+
+# converting from wide to long data frame and removing NAs
+food_df <- food_df[, !duplicated(colnames(food_df))]
+price_df <- price_df[, !duplicated(colnames(price_df))]
+
+gather(food_df, key = "Restaurant", value = "Food", link) -> food_long
+na.omit(food_long) -> food_long
+
+gather(price_df, key = "Restaurant", value = "Price", link) -> price_long
+na.omit(price_long) -> price_long
+
+# clean the price df
+price_long$Price <- gsub(" ", "", price_long$Price)
+# removing '$', but using as.character to keep '+'.
+price_long$Price <-  as.character(gsub("[\\$,]", "", price_long$Price))
+
+# merge food and price data frames together
+final_df <- cbind(food_long, price_long)
+
+# dropping the extra restaurant column
+final_df <- final_df[-3]
+
+# merging df_boston and final_df so that menu and location data are in one data frame
+boston <- merge.data.frame(final_df, df_boston, all.x = TRUE)
+```
+
+Now we need to retrieve the latitude and longitude for the addresses in the 'boston' data frame.
+
+Managed to retrieve coordinates by using the google sheets add-on "Geocode by Awesome Table". I uploaded a sheet of addresses, and it gave me the latitude and longitude for each. I saved this sheet as a .csv file and read it back into R.
+
+# Geocoding
+```{r}
+# Copying addresses to my clipboard to use in Google Sheets
+#writeClipboard(df_boston$Address)
+
+# Reading back in the coordinate data
+boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/boston_addresses.csv")
+
+# Updating the df with latitude and longitude columns
+boston_final <- merge.data.frame(boston, boston_add, all.x = TRUE)
+
+# saving boston_final df
+write.csv(boston_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/boston_final.csv")
+```
+
+Let's try generating a map with this data frame using leaflet for later use in RShiny.
