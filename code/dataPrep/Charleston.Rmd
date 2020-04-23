@@ -13,7 +13,6 @@ library(rvest)
 library(tidyr)
 ```
 
-
 Let's repeat the process for another city (Charleston, South Carolina)
 
 # Scraped Data from allmenus.com
@@ -77,7 +76,7 @@ Few different functions to get each item into its own list. Later converted to d
 s <- html_session("https://www.allmenus.com/sc/charleston/-/seafood/")
 
 link <- as.vector(df_charleston$Restaurant, mode = "character")
-n <- length(link) #number of pages
+n <- length(link) # number of restaurant names
 # function to get each food item from each restaurant
 food <- list()
 for (i in 1:n){

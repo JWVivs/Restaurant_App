@@ -35,7 +35,11 @@ ui <- dashboardPage(skin = "red",
                     dashboardSidebar(
                         sidebarMenu(
                             menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-                            menuItem("App Info", tabName = "appinfo", icon = icon("info-circle"))
+                            menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
+                            selectInput("city", "City:",
+                                        c("Boston" = "boston",
+                                          "Portland" = "portland",
+                                          "Charleston" = "charleston"))
                         )
                     ),
                     # Body content
@@ -44,12 +48,8 @@ ui <- dashboardPage(skin = "red",
                             # First tab content
                             tabItem(tabName = "dashboard",
                                     fluidRow(
-                                        box(plotOutput("map", height = 400)),
-                                        
-                                        box(
-                                            title = "Control Panel",
-                                            selectInput("select", "Select a City:", c("Boston", "Portland", "Charleston"))
-                                        )
+                                        box(plotOutput("map", height = 700)),
+                                     
                                     )),
                             tabItem(tabName = "appinfo",
                                     h2("App Instructions"),

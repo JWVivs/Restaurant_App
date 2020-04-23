@@ -73,7 +73,7 @@ Few different functions to get each item into its own list. Later converted to d
 s <- html_session("https://www.allmenus.com/me/portland/-/seafood/")
 
 link <- as.vector(df_portland$Restaurant, mode = "character")
-n <- length(link) #number of pages
+n <- length(link) # number of restaurant names
 # function to get each food item from each restaurant
 food <- list()
 for (i in 1:n){
