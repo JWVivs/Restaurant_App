@@ -40,6 +40,7 @@ charleston_final <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capst
 
 ```
 
+
 # Making a map of Boston
 ```{r}
 boston_add %>%
@@ -79,8 +80,26 @@ combined_map
 # binding each city's restaurant info
 df_3 <- rbind(df_boston, df_portland, df_charleston)
 
+# check for these strings, and attach the corresponding city name
+df_3 %>%
+  mutate(City = case_when(grepl(', MA', df_3$Address) ~ 'Boston', 
+                          grepl(', ME', df_3$Address) ~ 'Portland', 
+                          grepl(', SC', df_3$Address) ~ 'Charleston')) -> df_3
+
+# saving for use in app
+#write.csv(df_3, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_3.csv")
+
 # binding each city's coordinate info
 df_3_coord <- rbind(boston_add, portland_add, charleston_add)
+
+# attaching city column to df_3_coord as well
+df_3_coord %>%
+  mutate(City = case_when(grepl(', MA', df_3_coord$Address) ~ 'Boston', 
+                          grepl(', ME', df_3_coord$Address) ~ 'Portland', 
+                          grepl(', SC', df_3_coord$Address) ~ 'Charleston')) -> df_3_coord
+
+# saving for use in app
+#write.csv(df_3_coord, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_3_coord.csv")
 
 df_3_coord %>%
   leaflet() %>%
@@ -92,14 +111,3 @@ df_3_coord %>%
 
 map_3_cities
 ```
-
-
-```{r}
-### Trying to assign city and state their own unique column
-### for potential drop down menu selection in app
-
-# library(stringr)
-#df_combined$CityState <- str_extract(df_combined$Address, 'Boston, MA|Portland, ME')
-
-```
-
