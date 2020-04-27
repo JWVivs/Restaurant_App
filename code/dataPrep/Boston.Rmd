@@ -62,7 +62,7 @@ df_boston %>%
 df_boston <- subset(df_boston, !duplicated(df_boston[,3]))
 
 # saving for map usage later
-write.csv(df_boston, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_boston.csv")
+#write.csv(df_boston, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_boston.csv")
 ```
 
 
@@ -148,7 +148,7 @@ boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Re
 boston_final <- merge.data.frame(boston, boston_add, all.x = TRUE)
 
 # saving boston_final df
-write.csv(boston_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/boston_final.csv")
+#write.csv(boston_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/boston_final.csv")
 ```
 
 Let's try generating a map with this data frame using leaflet for later use in RShiny.

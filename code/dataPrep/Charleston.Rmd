@@ -66,7 +66,7 @@ df_charleston <- df_charleston[-2,]
 df_charleston <- subset(df_charleston, !duplicated(df_charleston[,3]))
 
 # saving for map usage later
-write.csv(df_charleston, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_charleston.csv")
+#write.csv(df_charleston, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_charleston.csv")
 ```
 
 
@@ -152,7 +152,7 @@ charleston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capston
 charleston_final <- merge.data.frame(charleston, charleston_add, all.x = TRUE)
 
 # saving charleston_final df
-write.csv(charleston_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/charleston_final.csv")
+#write.csv(charleston_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/charleston_final.csv")
 ```
 
 Add to the Boston and Portland map.

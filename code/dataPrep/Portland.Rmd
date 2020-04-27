@@ -63,7 +63,7 @@ df_portland %>%
 df_portland <- subset(df_portland, !duplicated(df_portland[,1]))
 
 # saving for map usage later
-write.csv(df_portland, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_portland.csv")
+#write.csv(df_portland, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_portland.csv")
 ```
 
 
@@ -149,7 +149,7 @@ portland_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/
 portland_final <- merge.data.frame(portland, portland_add, all.x = TRUE)
 
 # saving portland_final df
-write.csv(portland_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/portland_final.csv")
+#write.csv(portland_final, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/portland_final.csv")
 ```
 
 Now I need to combine this data with the Boston data to make a collective map.
