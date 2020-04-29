@@ -179,7 +179,7 @@ server <- function(input, output) {
         df_3_coord %>%
             leaflet() %>%
             addTiles() %>%
-            setView(lng, lat, zoom = 9) %>%
+            setView(lng, lat, zoom = 11) %>%
             addMarkers(clusterOptions = markerClusterOptions(), 
                        popup = paste(df_3$Restaurant, "<br>",
                                      df_3$Cuisine, "<br>",
