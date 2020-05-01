@@ -189,3 +189,82 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
+
+##########################
+
+### 4th design for app ###
+
+ui <- dashboardPage(
+    skin = "red",
+    dashboardHeader(title = "Restaurant App"),
+    
+    # Sidebar content
+    dashboardSidebar(
+        sidebarMenu(
+            menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+            menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
+            selectInput("city", label = "City",
+                        choices = c("Boston", "Portland", "Charleston")),
+            actionButton(inputId = "reset_view", label = "Reset View")
+        )),
+    
+    # Body content
+    dashboardBody(
+        tabItems(
+            tabItem(tabName = "dashboard",
+                    fluidRow(box(width = 12, leafletOutput(outputId = "mymap", height = 875)))),
+            tabItem(tabName = "appinfo",
+                    h1("App Instructions"),
+                    h3("Select a city from the drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
+                    h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data (IN PROGRESS)."))
+        )))
+
+
+server <- function(input, output){
+    v <- reactiveValues()
+    
+    observeEvent(input$reset_view, {
+        v$lng <- -75
+        v$lat <- 38
+        v$zoom <- 6
+    })
+    
+    observeEvent(input$city, {
+        v$lng <- if(input$city == "Boston") {
+            -71.05
+        } else if(input$city == "Portland") {
+            -70.25
+        } else if(input$city == "Charleston") {
+            -79.92
+        }
+        
+        v$lat <- if(input$city == "Boston") {
+            42.35
+        } else if(input$city == "Portland") {
+            43.65
+        } else if(input$city == "Charleston") {
+            32.78
+        }
+        
+        v$zoom <- if(input$city == "Boston") {
+            11
+        } else if(input$city == "Portland") {
+            11
+        } else if(input$city == "Charleston") {
+            11
+        }
+    })
+    
+    output$mymap <- renderLeaflet({
+        df_3_coord %>%
+            leaflet() %>%
+            addTiles() %>%
+            setView(v$lng, v$lat, v$zoom) %>%
+            addMarkers(clusterOptions = markerClusterOptions(), 
+                       popup = paste(df_3$Restaurant, "<br>",
+                                     df_3$Cuisine, "<br>",
+                                     df_3$Address))
+    })
+}
+
+shinyApp(ui = ui, server = server)
