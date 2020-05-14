@@ -1,0 +1,97 @@
+---
+title: "EDA"
+author: "John Viviani"
+date: "5/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+```
+
+# Reading in Data
+```{r}
+complete_df <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
+```
+
+
+# Oyster EDA
+```{r}
+# Filtering for food items that involve oysters
+complete_df[grepl("Oyster|oyster", complete_df$Food),] -> oyster_df
+
+# 51 unique restaurants that offer oyster items
+unique(oyster_df$Restaurant)
+str(oyster_df)
+
+# mean oyster price is $12.74
+mean(oyster_df$Price, na.rm = TRUE)
+
+ggplot(data = oyster_df, mapping = aes(x = City, y = Price)) + 
+  geom_point() +
+  geom_hline(yintercept = mean(oyster_df$Price, na.rm = TRUE),
+             size = 0.5, color = "red") + 
+  labs(title = "Prices of Oyster Items by City",
+       subtitle = "Mean of All Prices")
+
+```
+
+
+# General Menu EDA
+```{r}
+# mean price for entire menu data is $14.68
+mean(complete_df$Price, na.rm = TRUE)
+
+# filtering for mean menu price by city
+complete_df %>%
+  filter(City == "Boston" | City == "Charleston" | City == "Portland") %>%
+  group_by(City) %>%
+  summarise(Price = mean(Price, na.rm = TRUE)) -> menu_means
+
+menu_means
+
+ggplot(menu_means, mapping = aes(x = City, y = Price)) + 
+  geom_col(color = "black", fill = "dark blue") + 
+  ylim(0, 20) + 
+  labs(title = "Mean Price of Menu Items by City") + 
+  ylab("Price (dollars)")
+
+```
+
+Boston mean menu price is $15.60
+Charleston mean menu price is $11.63
+Portland mean menu price is $13.01
+
+
+# Counting Number of Items per Restaurant
+```{r}
+# number of food items per restaurant (by address to account for franchises)
+items_df <- aggregate(cbind(Items = complete_df$Food) ~ complete_df$Address,
+                      FUN = function(x){NROW(x)})
+
+items_df <- items_df %>%
+  arrange(desc(Items))
+
+items_df
+```
+
+Boston appears to have more items on their menu on average compared to the other cities (based on the sample of seafood restaurant data I have).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
