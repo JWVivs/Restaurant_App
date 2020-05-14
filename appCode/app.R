@@ -6,6 +6,9 @@ library(dplyr)
 # reading in custom_theme
 custom_theme <- readRDS("./appCode/custom_theme")
 
+# complete_df_app has addresses needed for map (compatible with 6th deisgn for app)
+complete_df_app <- read.csv("./data/processed/complete_df_app.csv")
+
 # boston_add contains the coordinates
 boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/boston_addresses.csv")
 # df_boston has the restaurant names and cuisine
@@ -364,7 +367,94 @@ server <- function(input, output){
 
 shinyApp(ui = ui, server = server)
 
+###############################
 
+### 6th design for app ### removing 7 restaurants w/o menu data ### updated address for Captain Marden's Seafood ###
+
+ui <- dashboardPage(
+    dashboardHeader(title = "Sales Forecasting Tool",
+                    titleWidth = 235),
+    
+    # Sidebar content
+    dashboardSidebar(imageOutput("oyster", height = "auto"),
+                     sidebarMenu(
+                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                         menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
+                         selectInput("city", label = "City",
+                                     choices = c("Boston", "Portland", "Charleston")),
+                         actionButton(inputId = "reset_view", label = "Reset View")
+                     )),
+    
+    # Body content
+    dashboardBody(custom_theme,
+                  tags$head(tags$style(HTML('
+                                            /* logo */
+                                            .skin-blue .main-header .logo {
+                                            color: #01244a;
+                                            }'))),
+                  tabItems(
+                      tabItem(tabName = "dashboard",
+                              fluidRow(box(width = 12, leafletOutput(outputId = "mymap", height = 875)))),
+                      tabItem(tabName = "appinfo",
+                              h1("App Instructions"),
+                              h3("Select a city from the drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
+                              h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."))
+                  )))
+
+
+server <- function(input, output){
+    v <- reactiveValues()
+    
+    observeEvent(input$reset_view, {
+        v$lng <- -75
+        v$lat <- 38
+        v$zoom <- 6
+    })
+    
+    observeEvent(input$city, {
+        v$lng <- if(input$city == "Boston") {
+            -71.05
+        } else if(input$city == "Portland") {
+            -70.25
+        } else if(input$city == "Charleston") {
+            -79.92
+        }
+        
+        v$lat <- if(input$city == "Boston") {
+            42.35
+        } else if(input$city == "Portland") {
+            43.65
+        } else if(input$city == "Charleston") {
+            32.78
+        }
+        
+        v$zoom <- if(input$city == "Boston") {
+            11
+        } else if(input$city == "Portland") {
+            11
+        } else if(input$city == "Charleston") {
+            11
+        }
+    })
+    
+    output$mymap <- renderLeaflet({
+        complete_df_app %>%
+            leaflet() %>%
+            addTiles() %>%
+            setView(v$lng, v$lat, v$zoom) %>%
+            addMarkers(clusterOptions = markerClusterOptions(), 
+                       popup = paste(complete_df_app$Restaurant, "<br>",
+                                     complete_df_app$Cuisine, "<br>",
+                                     complete_df_app$Address))
+    })
+    
+    output$oyster <- renderImage({
+        return(list(src = "./appCode/www/oyster.png", contentType = "image/png", height = "auto", width = "230px"))
+    }, deleteFile = FALSE)
+    
+}
+
+shinyApp(ui = ui, server = server)
 
 
 
