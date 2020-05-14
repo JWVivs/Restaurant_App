@@ -1,0 +1,95 @@
+---
+title: "Data Cleaning"
+author: "John Viviani"
+date: "5/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(data.table)
+library(car)
+```
+
+
+# Reading in the Data
+```{r}
+boston_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/boston_final.csv")
+portland_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/portland_final.csv")
+charleston_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/charleston_final.csv")
+
+# Checking for missing data in this data frame
+df_3 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_3.csv")
+```
+
+
+# Creating a complete data frame (contains menu, location, etc.)
+```{r}
+# Complete data frame with all relevant menu info.
+complete_df <- do.call("rbind", list(boston_final, portland_final, charleston_final))
+
+# Check for these strings, and attach the corresponding city name
+complete_df %>%
+  mutate(City = case_when(grepl(', MA', complete_df$Address) ~ 'Boston', 
+                          grepl(', ME', complete_df$Address) ~ 'Portland', 
+                          grepl(', SC', complete_df$Address) ~ 'Charleston')) -> complete_df
+
+str(complete_df)
+
+# Converting to character
+complete_df$Address <- as.character(complete_df$Address)
+complete_df$Restaurant <- as.character(complete_df$Restaurant)
+complete_df$Food <- as.character(complete_df$Food)
+complete_df$Cuisine <- as.character(complete_df$Cuisine)
+
+# Cleaning the price column + converting to numeric
+complete_df$Price <- as.numeric(gsub("[[:alpha:]|[:blank:]|,|+]", "", complete_df$Price))
+```
+
+
+# Checking for missing data
+```{r}
+cmp_df <- data.frame(unique(complete_df$Address))
+df3_new <- data.frame(unique(df_3$Address))
+
+# converting from factor to character
+cmp_df$unique.complete_df.Address. <- as.character(cmp_df$unique.complete_df.Address.)
+
+df3_new$unique.df_3.Address. <- as.character(df3_new$unique.df_3.Address.)
+
+#rename
+colnames(cmp_df) <- c("place")
+colnames(df3_new) <- c("place")
+
+# verifying structure is correct (character)
+str(cmp_df)
+str(df3_new)
+
+# 7 rows of missing data
+## This is because these restaurants did not have menu data available to pull
+## Need to remove from data; will use complete_df (111 restaurants) going forward
+missing_data <- anti_join(df3_new, cmp_df, by = "place")
+missing_data
+```
+
+
+# Fixing an Address String and Saving the Complete Data Frame
+```{r}
+# Checking for a particular address string
+complete_df[complete_df$Address %like% "Location",]
+
+# Fixing the address (says "Location Varies", but still pulls correct address info. Updating address.)
+complete_df <- complete_df %>% 
+  mutate(., Address = recode(Address, "'Location Varies Boston, MA, 02201' = '15 Court Square, Boston, MA 02108'"))
+
+#write.csv(complete_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
+
+# This data frame has each unique restaurant address to use for mapping in the app.
+complete_df_app <- data.frame(unique(complete_df[,c(2,3,6:9)]))
+
+#write.csv(complete_df_app, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app.csv")
+```
+
+The address pulled is labeled as "Location Varies Boston, MA, 02201"; however, the actual address being pulled is "15 Court Square, Boston, MA 02108". I updated the address in the data frame so the map in the app will display this address instead.
