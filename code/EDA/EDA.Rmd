@@ -15,6 +15,7 @@ library(ggplot2)
 # Reading in Data
 ```{r}
 complete_df <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
+complete_df_app <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app.csv")
 ```
 
 
@@ -72,6 +73,16 @@ Portland mean menu price is $13.01
 items_df <- aggregate(cbind(Items = complete_df$Food) ~ complete_df$Address,
                       FUN = function(x){NROW(x)})
 
+# attaching corresponding restaurant name to address
+items_df <- merge(items_df, complete_df_app, by.x = "complete_df$Address", by.y = "Address")
+
+# drop column 3
+items_df <- items_df[,-3]
+
+# renaming column 1
+colnames(items_df)[1] <- "Address"  
+
+# largest to smallest number of items
 items_df <- items_df %>%
   arrange(desc(Items))
 
