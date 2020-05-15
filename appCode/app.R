@@ -7,7 +7,7 @@ library(dplyr)
 custom_theme <- readRDS("./appCode/custom_theme")
 
 # complete_df_app has addresses needed for map (compatible with 6th deisgn for app)
-complete_df_app <- read.csv("./data/processed/complete_df_app.csv")
+complete_df_app <- readRDS("./data/processed/complete_df_app")
 
 # boston_add contains the coordinates
 boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/boston_addresses.csv")
