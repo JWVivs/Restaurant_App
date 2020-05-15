@@ -86,10 +86,16 @@ complete_df <- complete_df %>%
 
 #write.csv(complete_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
 
+# this will preserve the proper format for the variables
+#saveRDS(complete_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df")
+
 # This data frame has each unique restaurant address to use for mapping in the app.
 complete_df_app <- data.frame(unique(complete_df[,c(2,3,6:9)]))
 
 #write.csv(complete_df_app, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app.csv")
+
+# this will preserve the proper format for the variables
+#saveRDS(complete_df_app, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app")
 ```
 
 The address pulled is labeled as "Location Varies Boston, MA, 02201"; however, the actual address being pulled is "15 Court Square, Boston, MA 02108". I updated the address in the data frame so the map in the app will display this address instead.
