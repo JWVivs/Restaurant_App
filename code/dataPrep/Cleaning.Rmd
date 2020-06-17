@@ -99,3 +99,37 @@ complete_df_app <- data.frame(unique(complete_df[,c(2,3,6:9)]))
 ```
 
 The address pulled is labeled as "Location Varies Boston, MA, 02201"; however, the actual address being pulled is "15 Court Square, Boston, MA 02108". I updated the address in the data frame so the map in the app will display this address instead.
+
+```{r}
+n_occur <- data.frame(table(complete_df_app$Restaurant))
+# finding restaurants with the same name
+n_occur[n_occur$Freq > 1,]
+
+complete_df_app2 <- complete_df_app
+
+# appending part of address to distinguish between them
+complete_df_app2[94,3] <- "Captain D's 1936"
+complete_df_app2[100,3] <- "Captain D's 4008"
+complete_df_app2[104,3] <- "Captain D's 5130"
+complete_df_app2[106,3] <- "Captain D's 6326"
+complete_df_app2[88,3] <- "Charleston Crab House 145"
+complete_df_app2[101,3] <- "Charleston Crab House 41"
+complete_df_app2[5,3] <- "Legal Sea Foods 100"
+complete_df_app2[26,3] <- "Legal Sea Foods 255"
+complete_df_app2[27,3] <- "Legal Sea Foods 26"
+complete_df_app2[89,3] <- "Pearlz Oyster Bar 153"
+complete_df_app2[110,3] <- "Pearlz Oyster Bar 9"
+complete_df_app2[85,3] <- "The Boathouse 10"
+complete_df_app2[98,3] <- "The Boathouse 38"
+complete_df_app2[105,3] <- "The Boathouse 549"
+complete_df_app2[93,3] <- "The Crab Shack 1901"
+complete_df_app2[109,3] <- "The Crab Shack 8486"
+complete_df_app2[19,3] <- "The Daily Catch 2"
+complete_df_app2[37,3] <- "The Daily Catch 323"
+
+#write.csv(complete_df_app2, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app2.csv")
+
+# this will preserve the proper format for the variables
+#saveRDS(complete_df_app2, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app2")
+```
+
