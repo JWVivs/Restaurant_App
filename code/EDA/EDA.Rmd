@@ -10,12 +10,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(ggplot2)
+
+options(scipen = 999)
 ```
 
 # Reading in Data
 ```{r}
 complete_df <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
 complete_df_app <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app.csv")
+
+complete_df_app2 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app2.csv")
 ```
 
 
@@ -352,6 +356,10 @@ summary(topic_model3)
 topic_model4 <- stm(menu_dfm2, K = 25, init.type = "Spectral")
 summary(topic_model4)
 
+# topic_model2 with 5 topics
+topic_model5 <- stm(menu_dfm2, K = 5, init.type = "Spectral")
+summary(topic_model5)
+
 ```
 
 # Tidying the Topic Model
@@ -439,6 +447,25 @@ ggplot(td_gamma4, aes(gamma, fill = as.factor(topic))) +
   geom_histogram(show.legend = FALSE) + 
   facet_wrap(~topic, ncol = 3)
 
+### let's use topic_model5 ###
+td_beta5 <- tidy(topic_model5)
+
+td_beta5 %>%
+  group_by(topic) %>%
+  top_n(10) %>%
+  ungroup %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = topic)) + 
+  geom_col(show.legend = FALSE) + 
+  facet_wrap(~topic, scales = "free") + 
+  coord_flip()
+
+td_gamma5 <- tidy(topic_model5, matrix = "gamma",
+                  document_names = rownames(menu_dfm2))
+
+ggplot(td_gamma5, aes(gamma, fill = as.factor(topic))) + 
+  geom_histogram(show.legend = FALSE) + 
+  facet_wrap(~topic, ncol = 3)
 
 ```
 Do the restaurants seem to better fit the topics they're being assigned to in topic_model2? In some restaurants I've looked at, yes. Could be attributed to reducing more of the common words that appear (menu_dfm2).
@@ -454,13 +481,35 @@ Italian, Pizza, Seafood, Pasta
 
 Food items that contribute the most to topic 5 (pizza, steak, cheese). Restaurants with high gamma value in this topic seem to fit this topic.
 
+topic_model5:
+Topic 5 features lots of Chinese/Asian/Japanese seafood restaurants.
+
+Topic 4 is crab oriented.
+
+Topic 3 has 29 restaurants with a gamma value greater than 0.90.
+
+
+
 # Re-shaping td_gamma for visualization
 ```{r}
 # before reshaping; looking at each topic
 ggplot(td_gamma, aes(x = topic, y = gamma)) + 
   geom_point()
 
-count(topic)
+# boxplot for topic_model5
+td_gamma5$topic <- as.factor(td_gamma5$topic)
+
+ggplot(td_gamma5, aes(x = topic, y = gamma, fill = topic)) + 
+  geom_boxplot(outlier.color = "black", outlier.shape = 19,
+               outlier.size = 2)
+
+# boxplot for topic_model (original)
+td_gamma$topic <- as.factor(td_gamma$topic)
+
+ggplot(td_gamma, aes(x = topic, y = gamma, fill = topic)) + 
+  geom_boxplot(outlier.color = "black", outlier.shape = 19,
+               outlier.size = 2) + 
+  facet_wrap(~topic, ncol = 5)
 
 # converting to a wide data frame
 td_gamma_wide <- spread(td_gamma, key = topic, value = gamma)
@@ -468,16 +517,171 @@ td_gamma_wide <- spread(td_gamma, key = topic, value = gamma)
 # gamma for each topic adds up to 1 per restaurant (as they should)
 rowSums(td_gamma_wide[, -1])
 
-# topic 1 graph
-ggplot(td_gamma_wide, aes(x = document, y = `1`)) + 
+# topic 3 graph for original topic_model
+ggplot(td_gamma_wide, aes(x = document, y = `3`)) + 
   geom_point() + 
-  geom_text(aes(label = ifelse(`1` >= 0.50, document, ""), hjust = 1, vjust = 1))
+  geom_text(aes(label = ifelse(`3` >= 0.50, document, ""), hjust = 1, vjust = 1)) + 
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  labs(x = "Restaurant",
+       y = "Gamma",
+       title = "Gamma Values of Restaurants Assigned to Topic 3",
+       subtitle = "According to the Original topic_model")
+
+# same thing but for topic_model5
+td_gamma_wide5 <- spread(td_gamma5, key = topic, value = gamma)
+
+# gamma for each topic adds up to 1 per restaurant (as they should)
+rowSums(td_gamma_wide5[, -1])
+
+# topic 3 graph
+ggplot(td_gamma_wide5, aes(x = document, y = `3`)) + 
+  geom_point() + 
+  geom_text(aes(label = ifelse(`3` >= 0.50, document, ""), hjust = 1, vjust = 1)) + 
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  labs(x = "Restaurant",
+       y = "Gamma",
+       title = "Gamma Values of Restaurants Assigned to Topic 3",
+       subtitle = "According to topic_model5")
+
+
+# creating a euclidean distance matrix
+library(tidyverse)
+column_to_rownames(td_gamma_wide, var = "document") -> td_gamma_test
+
+# gamma_dist_mat <- dist(as.matrix(td_gamma_test, nrow = 111), method = "euclidean")
+# as.dist(gamma_dist_mat) -> asdist_gamma_mat
+# library(cluster)
+# as.matrix(td_gamma_test, nrow = 111) -> gamma_matrix
+# daisy(x = gamma_matrix, metric = "euclidean", stand = TRUE) -> testing
+
+library(fields)
+distmatrix <- rdist(td_gamma_test, td_gamma_test)
+
+# kmeans
+fit <- kmeans(distmatrix, 15)
+
+# cluster plot
+library(cluster)
+clusplot(td_gamma_test, fit$cluster,
+         color = TRUE, shade = TRUE,
+         labels = 2, lines = 0)
+
+# kmeans
+fit2 <- kmeans(distmatrix, 5)
+
+# cluster plot
+clusplot(td_gamma_test, fit2$cluster,
+         color = TRUE, shade = TRUE,
+         labels = 2, lines = 0)
+
+library(rgl)
+# include number of clusters in new dataset
+newdf <- data.frame(distmatrix, K = fit$cluster)
+pcdf <- princomp(distmatrix, cor = TRUE, score = TRUE)
+summary(pcdf)
+
+plot(pcdf, type = "lines")
+
+plot3d(pcdf$scores, col = newdf$K)
+```
+
+
+# hierarchical clustering
+```{r}
+# hierarchical clustering
+di <- dist(menu_dfm2, method = "euclidean")
+tree <- hclust(di, method = "ward.D")
+# using restaurant name as label; complete_df_app2 accounts for duped restaurant names with part of address added
+plot(tree, labels = complete_df_app2$Restaurant)
+rect.hclust(tree, k = 3, border = "red")
+
+```
 
 
 
+# ggplot with gamma and beta values
+```{r}
+library(tidyverse)
+library(scales)
+
+top_terms <- td_beta %>%
+  arrange(beta) %>%
+  group_by(topic) %>%
+  top_n(5, beta) %>%
+  arrange(-beta) %>%
+  select(topic, term) %>%
+  summarise(terms = list(term)) %>%
+  mutate(terms = map(terms, paste, collapse = ", ")) %>%
+  unnest()
+
+gamma_terms <- td_gamma %>%
+  group_by(topic) %>%
+  summarise(gamma = mean(gamma)) %>%
+  arrange(desc(gamma)) %>%
+  left_join(top_terms, by = "topic") %>%
+  mutate(topic = paste0("Topic ", topic),
+         topic = reorder(topic, gamma))
+
+gamma_terms %>%
+  top_n(20, gamma) %>%
+  ggplot(aes(topic, gamma, label = terms, fill = topic)) +
+  geom_col(show.legend = FALSE) + 
+  geom_text(hjust = 0, nudge_y = 0.0005, size = 3,
+            family = "IBMPlexSans") + 
+  coord_flip() + 
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(0, 0.09),
+                     labels = percent_format()) + 
+  theme(plot.title = element_text(size = 16,
+                                  family = "IBMPlexSans-Bold"),
+        plot.subtitle = element_text(size = 13)) + 
+  labs(x = NULL, y = expression(gamma),
+       title = "Top 20 Topics by Prevalence in the Restaurant Menu Corpus",
+       subtitle = "With the top words that contribute to each topic")
+
+### topic_model4 ###
+top_terms4 <- td_beta4 %>%
+  arrange(beta) %>%
+  group_by(topic) %>%
+  top_n(5, beta) %>%
+  arrange(-beta) %>%
+  select(topic, term) %>%
+  summarise(terms = list(term)) %>%
+  mutate(terms = map(terms, paste, collapse = ", ")) %>%
+  unnest()
+
+gamma_terms4 <- td_gamma4 %>%
+  group_by(topic) %>%
+  summarise(gamma = mean(gamma)) %>%
+  arrange(desc(gamma)) %>%
+  left_join(top_terms, by = "topic") %>%
+  mutate(topic = paste0("Topic ", topic),
+         topic = reorder(topic, gamma))
+
+gamma_terms4 %>%
+  top_n(20, gamma) %>%
+  ggplot(aes(topic, gamma, label = terms, fill = topic)) +
+  geom_col(show.legend = FALSE) + 
+  geom_text(hjust = 0, nudge_y = 0.0005, size = 3,
+            family = "IBMPlexSans") + 
+  coord_flip() + 
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(0, 0.09),
+                     labels = percent_format()) + 
+  theme(plot.title = element_text(size = 16,
+                                  family = "IBMPlexSans-Bold"),
+        plot.subtitle = element_text(size = 13)) + 
+  labs(x = NULL, y = expression(gamma),
+       title = "Top 20 Topics by Prevalence in the Restaurant Menu Corpus",
+       subtitle = "With the top words that contribute to each topic")
 
 
 ```
+
+
+
 
 
 
@@ -574,25 +778,41 @@ library(tsne)
 
 plot(model, perplexity = 7)
 
-
 ```
 
 read in a previously trained model with `model =  read.vectors("cookbook_vectors.bin")`
 
 
 
-# trying to cluster the restaurants based on menu items
+# trying to cluster the restaurants
 ```{r}
-library(wordVectors)
+library(cluster)
+library(fpc)
 
-test2 <- complete_df
-test2 <- test2[4:5]
+kmeans(menu_dfm2, centers = 5) -> test
+plotcluster(menu_dfm2, test$cluster)
 
-# text pre-processing
-test2$Food <- gsub("[^[:alnum:][:space:]]","", test2$Food)
-test2$Food <- tolower(test2$Food)
+### document clustering ###
+library(textmineR)
 
-data.num = model.matrix(~ . - 1, test2)
+# get IDF vector as a data frame
+tf_mat <- TermDocFreq(menu_dfm2)
+
+# TF-IDF and cosine similarity
+tfidf <- t(menu_dfm2[ , tf_mat$term]) * tf_mat$idf
+
+# calculate cosine similarity
+csim <- tfidf / sqrt(rowSums(tfidf * tfidf))
+
+csim <- csim %*% t(csim)
+
+# convert cosine similarity to distance by subtracting it from 1
+cdist <- as.dist(1 - csim)
+
+# clustering
+hc <- hclust(cdist, "ward.D")
+plot(hc)
 
 ```
+
 
