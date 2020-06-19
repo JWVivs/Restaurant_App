@@ -8,8 +8,28 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-library(dplyr)
-library(ggplot2)
+c("dplyr",
+  "ggplot2",
+  "tidyr",
+  "stringr", 
+  "tidytext",
+  "stm",
+  "quanteda",
+  "tidyverse",
+  "fields",
+  "cluster",
+  "rgl",
+  "scales"
+  ) -> package_names  
+for(package_name in package_names) {
+  if(!is.element(package_name, installed.packages()[,1])) {
+     install.packages(package_name,
+                      repos = "http://cran.mtu.edu/")
+  }
+  library(package_name, character.only=TRUE,
+          quietly=TRUE,verbose=FALSE)
+}
+rm(list=c("package_name", "package_names")) # clean up the environment
 
 options(scipen = 999)
 ```
@@ -18,12 +38,11 @@ options(scipen = 999)
 ```{r}
 complete_df <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
 complete_df_app <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app.csv")
-
 complete_df_app2 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app2.csv")
 ```
 
 
-# Oyster EDA
+# Oyster Price EDA
 ```{r}
 # Filtering for food items that involve oysters
 complete_df[grepl("Oyster|oyster", complete_df$Food),] -> oyster_df
@@ -41,11 +60,10 @@ ggplot(data = oyster_df, mapping = aes(x = City, y = Price)) +
              size = 0.5, color = "red") + 
   labs(title = "Prices of Oyster Items by City",
        subtitle = "Mean of All Prices")
-
 ```
 
 
-# General Menu EDA
+# General Price Menu EDA
 ```{r}
 # mean price for entire menu data is $14.68
 mean(complete_df$Price, na.rm = TRUE)
@@ -63,9 +81,7 @@ ggplot(menu_means, mapping = aes(x = City, y = Price)) +
   ylim(0, 20) + 
   labs(title = "Mean Price of Menu Items by City") + 
   ylab("Price (dollars)")
-
 ```
-
 Boston mean menu price is $15.60
 Charleston mean menu price is $11.63
 Portland mean menu price is $13.01
@@ -92,185 +108,10 @@ items_df <- items_df %>%
 
 items_df
 ```
-
 Boston appears to have more items on their menu on average compared to the other cities (based on the sample of seafood restaurant data I have).
 
 
-# Latent Dirichlet Allocation (LDA)
-```{r}
-#https://rpubs.com/Junny31/318845
-library(tm)
-library(SnowballC)
-
-# creating a corpus
-text_corpus <- VCorpus(VectorSource(complete_df$Food))
-
-print(text_corpus)
-
-# text preparation
-text_corpus_clean <- tm_map(text_corpus, content_transformer(tolower)) %>%
-  tm_map(., stemDocument) %>%
-  tm_map(., removeNumbers) %>%
-  tm_map(., removeWords, stopwords()) %>%
-  tm_map(., removePunctuation) %>%
-  tm_map(., stripWhitespace)
-
-
-library(wordcloud)
-# plot words with a minimum frequency of 20
-wordcloud(text_corpus_clean, min.freq = 20, random.order = FALSE,
-          colors=brewer.pal(8, "Dark2"))
-
-# model training
-text_dtm <- DocumentTermMatrix(text_corpus_clean)
-text_dtm
-
-findFreqTerms(text_dtm, lowfreq = 20)
-
-# each row of the input matrix needs to contain at least one non-zero entry
-ui = unique(text_dtm$i)
-text_dtm.new = text_dtm[ui,]
-
-library(topicmodels)
-
-text_lda <- LDA(text_dtm.new, k = 30, method = "VEM", control = NULL)
-text_lda
-
-# model evaluation
-library(tidytext)
-
-text_topics <- tidy(text_lda, matrix = "beta")
-
-text_topics
-
-library(ggplot2)
-library(dplyr)
-
-text_top_terms <- text_topics %>%
-  group_by(topic) %>%
-  top_n(5, beta) %>%
-  ungroup() %>%
-  arrange(topic, -beta)
-
-text_top_terms %>%
-  mutate(term = reorder(term, beta)) %>%
-  ggplot(aes(term, beta, fill = factor(topic))) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~ topic, scales = "free") +
-  coord_flip()
-
-```
-
-
-
-#https://towardsdatascience.com/beginners-guide-to-lda-topic-modelling-with-r-e57a5a8e7a25
-```{r}
-library(textmineR)
-
-# just want the food items
-foodItems <- as.data.frame(complete_df[,5])
-colnames(foodItems)[1] <- "Food"
-
-# text pre-processing
-foodItems <- as.data.frame(gsub("[^[:alnum:][:space:]]","", foodItems$Food))
-colnames(foodItems)[1] <- "Food"
-
-# create document term matrix
-dtm <- CreateDtm(foodItems$Food,
-                 ngram_window = c(1, 2))
-
-# explore the basic frequency
-tf <- TermDocFreq(dtm = dtm)
-original_tf <- tf %>% select(term, term_freq, doc_freq)
-rownames(original_tf) <- 1:nrow(original_tf)
-
-# Eliminate words appearing less than 2 times or in more than half of the documents
-vocabulary <- tf$term[tf$term_freq > 1 & tf$doc_freq < nrow(dtm) / 2]
-
-dtm = dtm
-
-# model building
-model <- FitLdaModel(dtm = dtm, k = 20, iterations = 100)
-
-coherence_df <- as.data.frame(model$coherence)
-
-coherence_df$id <- row.names(coherence_df)
-
-# plotting coherence score
-ggplot(coherence_df, aes(x = id, y = model$coherence)) +
-  geom_point() +
-  geom_line(group = 1)+
-  ggtitle("Best Topic by Coherence Score") + theme_minimal() +
-  ylab("Coherence") + 
-  xlab("k") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-# topic 9 has the best coherence score
-
-model$top_terms <- GetTopTerms(phi = model$phi, M = 20)
-top20_wide <- as.data.frame(model$top_terms)
-```
-
-k = 2 yields the highest coherence score. In other words, the model believes that the words in topic 2 are most semantically similar among the 20 topics.
-
-
-
-#https://data.library.virginia.edu/a-beginners-guide-to-text-analysis-with-quanteda/
-```{r}
-library(quanteda)
-
-# just want the food items and an id column
-foodItems <- as.data.frame(complete_df[,c(2,5)])
-colnames(foodItems)[1] <- "id"
-
-# text pre-processing
-foodItems$Food <- gsub("[^[:alnum:][:space:]]","", foodItems$Food)
-
-# creating a corpus
-doc.corpus <- corpus(foodItems$Food)
-summary(doc.corpus)
-
-# cleaning and creating tokens
-doc.tokens <- tokens(doc.corpus)
-doc.tokens <- tokens(doc.tokens, remove_punct = TRUE, 
-                     remove_numbers = TRUE)
-# removing stop words
-doc.tokens <- tokens_select(doc.tokens, stopwords('english'),selection='remove')
-# stem (reduce each word down to its base form) the tokens
-doc.tokens <- tokens_wordstem(doc.tokens)
-# convert to lowercase
-doc.tokens <- tokens_tolower(doc.tokens)
-
-# converting to a document feature matrix
-doc.dfm <- dfm(doc.corpus, remove_numbers = TRUE,
-               stem = TRUE,
-               remove = stopwords("english"))
-# use previously created tokenized object as dfm to be safe
-doc.dfm.final <- dfm(doc.tokens)
-
-# look at certain words
-View(head(kwic(doc.tokens, "shrimp", window = 3)))
-
-# looking at the top 5 words
-topfeatures(doc.dfm.final, 5)
-
-# top 20 words
-list_top20 <- rownames(as.data.frame(topfeatures(doc.dfm.final, 20)))
-
-View(kwic(doc.tokens, list_top20, window = 3))
-
-corpus_dictionary <- as.data.frame(kwic(doc.corpus, list_top20))
-
-# top 50 words
-topfeatures(doc.dfm.final, 50)
-list_top50 <- rownames(as.data.frame(topfeatures(doc.dfm.final, 50)))
-
-dictionary_50 <- kwic(doc.tokens, list_top50, window = 3)
-
-View(kwic(doc.tokens, list_top50, window = 3))
-```
-
-
-# More Topic Modeling with R and Tidy Data Principles
+# Topic Modeling with R and Tidy Data Principles
 ```{r}
 library(dplyr)
 library(tidyr)
@@ -305,27 +146,9 @@ tidy_tm_df2 <- tm_df %>%
 
 tidy_tm_df2 %>%
   count(word, sort = TRUE)
-
 ```
+tidy_tm_df2 gets rid of some more common words as opposed to tidy_tm_df, which should be beneficial for the model going forward.
 
-# Explore tf-idf
-```{r}
-library(ggplot2)
-
-tidy_tm_df %>%
-  count(Address, word, sort = TRUE) %>%
-  bind_tf_idf(word, Address, n) %>%
-  group_by(Address) %>%
-  top_n(3) %>%
-  ungroup %>%
-  mutate(word = reorder(word, tf_idf)) %>%
-  ggplot(aes(word, tf_idf, fill = Address)) + 
-  geom_col(show.legend = FALSE) + 
-  facet_wrap(~Address, scales = "free") + 
-  coord_flip()
-# tf_idf tells us how important is this word to this document compared to the other docs in the collection
-
-```
 
 # Implement Topic Modeling
 ```{r}
@@ -359,8 +182,9 @@ summary(topic_model4)
 # topic_model2 with 5 topics
 topic_model5 <- stm(menu_dfm2, K = 5, init.type = "Spectral")
 summary(topic_model5)
-
 ```
+Training a handful of different topic models to look at beta and gamma values, and hopefully make meaningful inferences between each of them.
+
 
 # Tidying the Topic Model
 ```{r}
@@ -376,7 +200,7 @@ td_beta %>%
   geom_col(show.legend = FALSE) + 
   facet_wrap(~topic, scales = "free") + 
   coord_flip()
-# which words contribute the most to which topic
+# beta tells us which words contribute the most to which topic
 
 td_gamma <- tidy(topic_model, matrix = "gamma",
                  document_names = rownames(menu_dfm))
@@ -385,7 +209,7 @@ td_gamma <- tidy(topic_model, matrix = "gamma",
 ggplot(td_gamma, aes(gamma, fill = as.factor(topic))) + 
   geom_histogram(show.legend = FALSE) + 
   facet_wrap(~topic, ncol = 3)
-# how likely does this document belong to this topic
+# gamma tells us how likely does this document belong to this topic
 
 ### let's use topic_model2 ###
 td_beta2 <- tidy(topic_model2)
@@ -466,7 +290,6 @@ td_gamma5 <- tidy(topic_model5, matrix = "gamma",
 ggplot(td_gamma5, aes(gamma, fill = as.factor(topic))) + 
   geom_histogram(show.legend = FALSE) + 
   facet_wrap(~topic, ncol = 3)
-
 ```
 Do the restaurants seem to better fit the topics they're being assigned to in topic_model2? In some restaurants I've looked at, yes. Could be attributed to reducing more of the common words that appear (menu_dfm2).
 
@@ -489,8 +312,7 @@ Topic 4 is crab oriented.
 Topic 3 has 29 restaurants with a gamma value greater than 0.90.
 
 
-
-# Re-shaping td_gamma for visualization
+# Re-shaping td_gamma for Visualization
 ```{r}
 # before reshaping; looking at each topic
 ggplot(td_gamma, aes(x = topic, y = gamma)) + 
@@ -550,12 +372,6 @@ ggplot(td_gamma_wide5, aes(x = document, y = `3`)) +
 library(tidyverse)
 column_to_rownames(td_gamma_wide, var = "document") -> td_gamma_test
 
-# gamma_dist_mat <- dist(as.matrix(td_gamma_test, nrow = 111), method = "euclidean")
-# as.dist(gamma_dist_mat) -> asdist_gamma_mat
-# library(cluster)
-# as.matrix(td_gamma_test, nrow = 111) -> gamma_matrix
-# daisy(x = gamma_matrix, metric = "euclidean", stand = TRUE) -> testing
-
 library(fields)
 distmatrix <- rdist(td_gamma_test, td_gamma_test)
 
@@ -568,10 +384,10 @@ clusplot(td_gamma_test, fit$cluster,
          color = TRUE, shade = TRUE,
          labels = 2, lines = 0)
 
-# kmeans
+# kmeans 2nd fit
 fit2 <- kmeans(distmatrix, 5)
 
-# cluster plot
+# cluster plot (2nd fit)
 clusplot(td_gamma_test, fit2$cluster,
          color = TRUE, shade = TRUE,
          labels = 2, lines = 0)
@@ -586,9 +402,11 @@ plot(pcdf, type = "lines")
 
 plot3d(pcdf$scores, col = newdf$K)
 ```
+The first kmeans fit uses 15 topics. When clustered, it's a bit straining to look through, so I also made a kmeans that uses only 5 topics.
+Note: this originates from our original 'topic_model', which used 'menu_dfm'. 'menu_dfm' did not remove as many common words as 'menu_dfm2', so you will want to test this out on a topic model that uses 'menu_dfm2' as well.
 
 
-# hierarchical clustering
+# Hierarchical Clustering
 ```{r}
 # hierarchical clustering
 di <- dist(menu_dfm2, method = "euclidean")
@@ -596,93 +414,195 @@ tree <- hclust(di, method = "ward.D")
 # using restaurant name as label; complete_df_app2 accounts for duped restaurant names with part of address added
 plot(tree, labels = complete_df_app2$Restaurant)
 rect.hclust(tree, k = 3, border = "red")
-
 ```
+Franchises (same menu) are clustered together, which is a good sign. Double-checked the distmatrix and their Euclidean distances are properly valued (e.g. franchises with the same menu have distances of 0).
 
 
 
-# ggplot with gamma and beta values
+
+
+## Prior Use
+
+# Latent Dirichlet Allocation (LDA)
 ```{r}
-library(tidyverse)
-library(scales)
+#https://rpubs.com/Junny31/318845
+library(tm)
+library(SnowballC)
 
-top_terms <- td_beta %>%
-  arrange(beta) %>%
+# creating a corpus
+text_corpus <- VCorpus(VectorSource(complete_df$Food))
+
+print(text_corpus)
+
+# text preparation
+text_corpus_clean <- tm_map(text_corpus, content_transformer(tolower)) %>%
+  tm_map(., stemDocument) %>%
+  tm_map(., removeNumbers) %>%
+  tm_map(., removeWords, stopwords()) %>%
+  tm_map(., removePunctuation) %>%
+  tm_map(., stripWhitespace)
+
+
+library(wordcloud)
+# plot words with a minimum frequency of 20
+wordcloud(text_corpus_clean, min.freq = 20, random.order = FALSE,
+          colors=brewer.pal(8, "Dark2"))
+
+# model training
+text_dtm <- DocumentTermMatrix(text_corpus_clean)
+text_dtm
+
+findFreqTerms(text_dtm, lowfreq = 20)
+
+# each row of the input matrix needs to contain at least one non-zero entry
+ui = unique(text_dtm$i)
+text_dtm.new = text_dtm[ui,]
+
+library(topicmodels)
+
+text_lda <- LDA(text_dtm.new, k = 30, method = "VEM", control = NULL)
+text_lda
+
+# model evaluation
+library(tidytext)
+
+text_topics <- tidy(text_lda, matrix = "beta")
+
+text_topics
+
+library(ggplot2)
+library(dplyr)
+
+text_top_terms <- text_topics %>%
   group_by(topic) %>%
   top_n(5, beta) %>%
-  arrange(-beta) %>%
-  select(topic, term) %>%
-  summarise(terms = list(term)) %>%
-  mutate(terms = map(terms, paste, collapse = ", ")) %>%
-  unnest()
+  ungroup() %>%
+  arrange(topic, -beta)
 
-gamma_terms <- td_gamma %>%
-  group_by(topic) %>%
-  summarise(gamma = mean(gamma)) %>%
-  arrange(desc(gamma)) %>%
-  left_join(top_terms, by = "topic") %>%
-  mutate(topic = paste0("Topic ", topic),
-         topic = reorder(topic, gamma))
-
-gamma_terms %>%
-  top_n(20, gamma) %>%
-  ggplot(aes(topic, gamma, label = terms, fill = topic)) +
-  geom_col(show.legend = FALSE) + 
-  geom_text(hjust = 0, nudge_y = 0.0005, size = 3,
-            family = "IBMPlexSans") + 
-  coord_flip() + 
-  scale_y_continuous(expand = c(0, 0),
-                     limits = c(0, 0.09),
-                     labels = percent_format()) + 
-  theme(plot.title = element_text(size = 16,
-                                  family = "IBMPlexSans-Bold"),
-        plot.subtitle = element_text(size = 13)) + 
-  labs(x = NULL, y = expression(gamma),
-       title = "Top 20 Topics by Prevalence in the Restaurant Menu Corpus",
-       subtitle = "With the top words that contribute to each topic")
-
-### topic_model4 ###
-top_terms4 <- td_beta4 %>%
-  arrange(beta) %>%
-  group_by(topic) %>%
-  top_n(5, beta) %>%
-  arrange(-beta) %>%
-  select(topic, term) %>%
-  summarise(terms = list(term)) %>%
-  mutate(terms = map(terms, paste, collapse = ", ")) %>%
-  unnest()
-
-gamma_terms4 <- td_gamma4 %>%
-  group_by(topic) %>%
-  summarise(gamma = mean(gamma)) %>%
-  arrange(desc(gamma)) %>%
-  left_join(top_terms, by = "topic") %>%
-  mutate(topic = paste0("Topic ", topic),
-         topic = reorder(topic, gamma))
-
-gamma_terms4 %>%
-  top_n(20, gamma) %>%
-  ggplot(aes(topic, gamma, label = terms, fill = topic)) +
-  geom_col(show.legend = FALSE) + 
-  geom_text(hjust = 0, nudge_y = 0.0005, size = 3,
-            family = "IBMPlexSans") + 
-  coord_flip() + 
-  scale_y_continuous(expand = c(0, 0),
-                     limits = c(0, 0.09),
-                     labels = percent_format()) + 
-  theme(plot.title = element_text(size = 16,
-                                  family = "IBMPlexSans-Bold"),
-        plot.subtitle = element_text(size = 13)) + 
-  labs(x = NULL, y = expression(gamma),
-       title = "Top 20 Topics by Prevalence in the Restaurant Menu Corpus",
-       subtitle = "With the top words that contribute to each topic")
-
-
+text_top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
 ```
 
 
+# More with LDA
+```{r}
+# https://towardsdatascience.com/beginners-guide-to-lda-topic-modelling-with-r-e57a5a8e7a25
+library(textmineR)
+
+# just want the food items
+foodItems <- as.data.frame(complete_df[,5])
+colnames(foodItems)[1] <- "Food"
+
+# text pre-processing
+foodItems <- as.data.frame(gsub("[^[:alnum:][:space:]]","", foodItems$Food))
+colnames(foodItems)[1] <- "Food"
+
+# create document term matrix
+dtm <- CreateDtm(foodItems$Food,
+                 ngram_window = c(1, 2))
+
+# explore the basic frequency
+tf <- TermDocFreq(dtm = dtm)
+original_tf <- tf %>% select(term, term_freq, doc_freq)
+rownames(original_tf) <- 1:nrow(original_tf)
+
+# Eliminate words appearing less than 2 times or in more than half of the documents
+vocabulary <- tf$term[tf$term_freq > 1 & tf$doc_freq < nrow(dtm) / 2]
+
+dtm = dtm
+
+# model building
+model <- FitLdaModel(dtm = dtm, k = 8, iterations = 100)
+
+coherence_df <- as.data.frame(model$coherence)
+
+coherence_df$id <- row.names(coherence_df)
+
+# plotting coherence score
+ggplot(coherence_df, aes(x = id, y = model$coherence)) +
+  geom_point() +
+  geom_line(group = 1)+
+  ggtitle("Best Topic by Coherence Score") + theme_minimal() +
+  ylab("Coherence") + 
+  xlab("k") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# topic 2 has the best coherence score
+
+# top 20 terms to best describe the topic
+model$top_terms <- GetTopTerms(phi = model$phi, M = 20)
+top20_wide <- as.data.frame(model$top_terms)
+
+# hierarchical clustering of the topics
+model$topic_linguistic_dist <- CalcHellingerDist(model$phi)
+
+model$hclust <- hclust(as.dist(model$topic_linguistic_dist), "ward.D")
+model$hclust$labels <- paste(model$hclust$labels, model$labels[,1])
+
+plot(model$hclust)
+```
+
+k = 2 yields the highest coherence score. In other words, the model believes that the words in topic 2 are most semantically similar among the 20 topics.
 
 
+# Text Analysis with quanteda
+```{r}
+#https://data.library.virginia.edu/a-beginners-guide-to-text-analysis-with-quanteda/
+library(quanteda)
+
+# just want the food items and an id column
+foodItems <- as.data.frame(complete_df[,c(2,5)])
+colnames(foodItems)[1] <- "id"
+
+# text pre-processing
+foodItems$Food <- gsub("[^[:alnum:][:space:]]","", foodItems$Food)
+
+# creating a corpus
+doc.corpus <- corpus(foodItems$Food)
+summary(doc.corpus)
+
+# cleaning and creating tokens
+doc.tokens <- tokens(doc.corpus)
+doc.tokens <- tokens(doc.tokens, remove_punct = TRUE, 
+                     remove_numbers = TRUE)
+# removing stop words
+doc.tokens <- tokens_select(doc.tokens, stopwords('english'),selection='remove')
+# stem (reduce each word down to its base form) the tokens
+doc.tokens <- tokens_wordstem(doc.tokens)
+# convert to lowercase
+doc.tokens <- tokens_tolower(doc.tokens)
+
+# converting to a document feature matrix
+doc.dfm <- dfm(doc.corpus, remove_numbers = TRUE,
+               stem = TRUE,
+               remove = stopwords("english"))
+# use previously created tokenized object as dfm to be safe
+doc.dfm.final <- dfm(doc.tokens)
+
+# look at certain words
+View(head(kwic(doc.tokens, "shrimp", window = 3)))
+
+# looking at the top 5 words
+topfeatures(doc.dfm.final, 5)
+
+# top 20 words
+list_top20 <- rownames(as.data.frame(topfeatures(doc.dfm.final, 20)))
+
+View(kwic(doc.tokens, list_top20, window = 3))
+
+corpus_dictionary <- as.data.frame(kwic(doc.corpus, list_top20))
+
+# top 50 words
+topfeatures(doc.dfm.final, 50)
+list_top50 <- rownames(as.data.frame(topfeatures(doc.dfm.final, 50)))
+
+dictionary_50 <- kwic(doc.tokens, list_top50, window = 3)
+
+View(kwic(doc.tokens, list_top50, window = 3))
+```
 
 
 # https://github.com/bmschmidt/wordVectors/blob/master/vignettes/introduction.Rmd
@@ -706,8 +626,6 @@ if (!file.exists("cookbooks.txt")) prep_word2vec(origin="cookbooks",destination=
 
 # training
 if (!file.exists("cookbook_vectors.bin")) {model = train_word2vec("cookbooks.txt","cookbook_vectors.bin",vectors=200,threads=4,window=12,iter=5,negative_samples=0)} else model = read.vectors("cookbook_vectors.bin")
-
-
 ```
 
 
@@ -777,11 +695,8 @@ subset %>%
 library(tsne)
 
 plot(model, perplexity = 7)
-
 ```
-
 read in a previously trained model with `model =  read.vectors("cookbook_vectors.bin")`
-
 
 
 # trying to cluster the restaurants
@@ -814,5 +729,4 @@ hc <- hclust(cdist, "ward.D")
 plot(hc)
 
 ```
-
 
