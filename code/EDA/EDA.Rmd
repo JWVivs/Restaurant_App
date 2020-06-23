@@ -418,6 +418,112 @@ rect.hclust(tree, k = 3, border = "red")
 Franchises (same menu) are clustered together, which is a good sign. Double-checked the distmatrix and their Euclidean distances are properly valued (e.g. franchises with the same menu have distances of 0).
 
 
+# Adding Restaurant Names to the Distance Matrix
+```{r}
+td_gamma_wideNames <- td_gamma_wide
+# changing column name to match with complete_df_app
+colnames(td_gamma_wideNames)[1] <- "Address"
+
+# now we have the correct order of names to add to the distance matrix
+td_euc <- merge(td_gamma_wideNames, complete_df_app2, by = "Address")
+
+# making a dupe of it
+distmatrix2 <- distmatrix
+
+# copying these restaurant names
+dput(td_euc$Restaurant)
+
+# changing the column names to the corresponding restaurant name
+colnames(distmatrix2) <- c("Ostra", "Legal C Bar", "Aura", "Legal Osteria", "The Boathouse 10", 
+"Hank's Seafood Restaurant", "Legal Sea Foods 100", "Harborside Grill and Patio", 
+"Kipo's", "Susan's Fish N Chips", "Anson", "Stockyard", "Boston Chops", 
+"Morse Fish Company", "Charleston Crab House 145", "Captain Marden's Seafoods", 
+"Walter's", "No Name Restaurant", "James Hook & Co Lobsters", 
+"Blackstone Grill", "Pearlz Oyster Bar 153", "Long John Silver's", 
+"Central Wharf Co.", "Cypress Restaurant", "Blossom", "Himalayan Bistro", 
+"Phu-Ket Thai Restaurant", "Fleet Landing", "The Tap", "The Crab Shack 1901", 
+"Captain D's 1936", "The Daily Catch 2", "The Upper Crust Pizzeria", 
+"Tia's", "Amen Street Fish & Rawbar", "Hyman's Seafood", "The Falmouth Sea Grill", 
+"75 on Liberty Wharf", "LTK", "The Lobster Shack", "Alfredo's Italian Kitchen", 
+"GaGa Seafood", "DiMillo's Floating Restaurant & Marina", "Legal Sea Foods 255", 
+"Legal Sea Foods 26", "Off the Boat", "Four Winds Seafood Grille", 
+"East Ocean City", "Saigon Seafood Restaurant", "Legal Harborside", 
+"Brother's Crawfish", "Waterline", "Yankee Lobster", "Supreme House of Pizza", 
+"The Daily Catch 323", "Street & Co.", "Durgin Park", "A W Shuck's Seafood", 
+"Captain Fishbones", "The Boathouse 38", "Weathervane Seafood Restaurant", 
+"Row 34", "Coast", "Oceanaire", "Captain D's 4008", "Arboretum Pizza Grill", 
+"Rincon Limeno Restaurant", "Charleston Crab House 41", "Union Oyster House", 
+"Thai North Catering", "Fish", "Bubor Cha Cha", "Nick's House of Pizza & Seafood", 
+"China Bo ($1 Chinese Rice/#1 Chinese Food)", "Fire House Seafood", 
+"New Jumbo Seafood", "J's Oyster", "Jasper White's Summer Shack", 
+"Island Creek Oyster Bar", "Locklear's Fine Seafood", "Miel", 
+"Captain D's 5130", "Hoshiya Sushi", "The Boathouse 549", "B&G Oysters", 
+"Legal Crossing", "Chart House", "Neptune Oyster", "Captain D's 6326", 
+"Lorenz Island Kuisine", "New Golden Gate", "24 Hour Pizza Delivery", 
+"75 Chestnut", "Luke's Lobster", "Royal Roast Beef and Seafood", 
+"Atlantic Fish Company", "L'Espalier", "Abe & Louie's Steakhouse", 
+"Boston Sail Loft", "Crab Shack", "Chau Chow City", "Huff's Seafood", 
+"The Crab Shack 8486", "KO Pies", "Barking Crab", "Pearlz Oyster Bar 9", 
+"Towne Stove and Spirits", "Gilbert's Chowder House", "Old Port Sea Grill & Raw Bar", 
+"Bubba Gump Shrimp Co.", "McCormick & Schmick's")
+
+# likewise for row names
+rownames(distmatrix2) <- c("Ostra", "Legal C Bar", "Aura", "Legal Osteria", "The Boathouse 10", 
+"Hank's Seafood Restaurant", "Legal Sea Foods 100", "Harborside Grill and Patio", 
+"Kipo's", "Susan's Fish N Chips", "Anson", "Stockyard", "Boston Chops", 
+"Morse Fish Company", "Charleston Crab House 145", "Captain Marden's Seafoods", 
+"Walter's", "No Name Restaurant", "James Hook & Co Lobsters", 
+"Blackstone Grill", "Pearlz Oyster Bar 153", "Long John Silver's", 
+"Central Wharf Co.", "Cypress Restaurant", "Blossom", "Himalayan Bistro", 
+"Phu-Ket Thai Restaurant", "Fleet Landing", "The Tap", "The Crab Shack 1901", 
+"Captain D's 1936", "The Daily Catch 2", "The Upper Crust Pizzeria", 
+"Tia's", "Amen Street Fish & Rawbar", "Hyman's Seafood", "The Falmouth Sea Grill", 
+"75 on Liberty Wharf", "LTK", "The Lobster Shack", "Alfredo's Italian Kitchen", 
+"GaGa Seafood", "DiMillo's Floating Restaurant & Marina", "Legal Sea Foods 255", 
+"Legal Sea Foods 26", "Off the Boat", "Four Winds Seafood Grille", 
+"East Ocean City", "Saigon Seafood Restaurant", "Legal Harborside", 
+"Brother's Crawfish", "Waterline", "Yankee Lobster", "Supreme House of Pizza", 
+"The Daily Catch 323", "Street & Co.", "Durgin Park", "A W Shuck's Seafood", 
+"Captain Fishbones", "The Boathouse 38", "Weathervane Seafood Restaurant", 
+"Row 34", "Coast", "Oceanaire", "Captain D's 4008", "Arboretum Pizza Grill", 
+"Rincon Limeno Restaurant", "Charleston Crab House 41", "Union Oyster House", 
+"Thai North Catering", "Fish", "Bubor Cha Cha", "Nick's House of Pizza & Seafood", 
+"China Bo ($1 Chinese Rice/#1 Chinese Food)", "Fire House Seafood", 
+"New Jumbo Seafood", "J's Oyster", "Jasper White's Summer Shack", 
+"Island Creek Oyster Bar", "Locklear's Fine Seafood", "Miel", 
+"Captain D's 5130", "Hoshiya Sushi", "The Boathouse 549", "B&G Oysters", 
+"Legal Crossing", "Chart House", "Neptune Oyster", "Captain D's 6326", 
+"Lorenz Island Kuisine", "New Golden Gate", "24 Hour Pizza Delivery", 
+"75 Chestnut", "Luke's Lobster", "Royal Roast Beef and Seafood", 
+"Atlantic Fish Company", "L'Espalier", "Abe & Louie's Steakhouse", 
+"Boston Sail Loft", "Crab Shack", "Chau Chow City", "Huff's Seafood", 
+"The Crab Shack 8486", "KO Pies", "Barking Crab", "Pearlz Oyster Bar 9", 
+"Towne Stove and Spirits", "Gilbert's Chowder House", "Old Port Sea Grill & Raw Bar", 
+"Bubba Gump Shrimp Co.", "McCormick & Schmick's")
+```
+Now that we have our distance matrix properly labeled with the corresponding restaurant names, we can move on to making a data frame featuring the lowest Euclidean distances.
+
+
+# Creating a Data Frame with the Lowest Euclidean Distances
+```{r}
+distmatrix_df <- as.data.frame(distmatrix2)
+
+distmatrix_df %>%
+  # 2 = column
+  apply(., 2, sort, decreasing = FALSE) %>%
+  as.data.frame() %>% 
+  top_n(-10, 1:111) %>% View()
+
+# now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants)
+
+distmatrix_df[distmatrix_df == 0] <- NA
+
+# may need to get df into a long format
+
+
+```
+
+
 
 
 
