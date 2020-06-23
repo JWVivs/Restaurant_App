@@ -4,10 +4,10 @@ library(leaflet)
 library(dplyr)
 
 # reading in custom_theme
-custom_theme <- readRDS("./appCode/custom_theme")
+custom_theme <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/custom_theme")
 
 # complete_df_app has addresses needed for map (compatible with 6th deisgn for app)
-complete_df_app <- readRDS("./data/processed/complete_df_app")
+complete_df_app <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app")
 
 # boston_add contains the coordinates
 boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/boston_addresses.csv")
@@ -443,9 +443,10 @@ server <- function(input, output){
             addTiles() %>%
             setView(v$lng, v$lat, v$zoom) %>%
             addMarkers(clusterOptions = markerClusterOptions(), 
-                       popup = paste(complete_df_app$Restaurant, "<br>",
-                                     complete_df_app$Cuisine, "<br>",
-                                     complete_df_app$Address))
+                       popup = paste("<b> Restaurant Name: </b>", complete_df_app$Restaurant, "<br>",
+                                     "<b> Type: </b>", complete_df_app$Cuisine, "<br>",
+                                     "<b> Address: </b>", complete_df_app$Address, "<br>",
+                                     "<b> Most Similar Restaurants: </b>"))
     })
     
     output$oyster <- renderImage({
