@@ -514,13 +514,47 @@ distmatrix_df %>%
   as.data.frame() %>% 
   top_n(-10, 1:111) %>% View()
 
-# now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants)
+# now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants) ## dont do yet
 
-distmatrix_df[distmatrix_df == 0] <- NA
+# distmatrix_df[distmatrix_df == 0] <- NA
 
 # may need to get df into a long format
+longdf <- tibble::rownames_to_column(distmatrix_df, "Similar_Restaurant")
+longdf <- melt(longdf)
+# changing the column names
+colnames(longdf)[2] <- "Restaurant"
+colnames(longdf)[3] <- "Distance"
 
+longdf <- merge(longdf, complete_df_app2, by = "Restaurant")
 
+# getting rid of unnecessary columns
+longdf <- longdf[,-(4:5)]
+# arranging by restaurant and lowest distance
+# only care about distances greater than 0 (otherwise we'll get the restaurant being observed as a similar restaurant) 
+longdf <- longdf %>% 
+  arrange(Restaurant, Distance) %>% 
+  filter(Distance > 0) %>% View
+
+# getting the top 5 lowest distances
+similar <- longdf %>% 
+  group_by(Restaurant) %>% 
+  top_n(-5, Distance)
+
+# for now... pasting list of similar restaurant names into a column with the respective restaurant
+similar <- aggregate(similar$Similar_Restaurant, list(similar$Restaurant), paste, collapse = ", ")
+
+# renaming column
+colnames(similar)[1] <- "Restaurant"
+
+# merging the similar restaurants with complete_df_app2
+sim_rest_df <- merge(similar, complete_df_app2, by = "Restaurant")
+
+# getting rid of unnecessary columns
+sim_rest_df <- sim_rest_df[,-(3:4)]
+
+# renaming column
+colnames(sim_rest_df)[2] <- "Similar_Restaurant"
+# now we can put this into the app (replace complete_df_app with sim_rest_df)
 ```
 
 
