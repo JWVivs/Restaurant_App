@@ -438,15 +438,15 @@ server <- function(input, output){
     })
     
     output$mymap <- renderLeaflet({
-        complete_df_app %>%
+        sim_rest_df %>%
             leaflet() %>%
             addTiles() %>%
             setView(v$lng, v$lat, v$zoom) %>%
             addMarkers(clusterOptions = markerClusterOptions(), 
-                       popup = paste("<b> Restaurant Name: </b>", complete_df_app$Restaurant, "<br>",
-                                     "<b> Type: </b>", complete_df_app$Cuisine, "<br>",
-                                     "<b> Address: </b>", complete_df_app$Address, "<br>",
-                                     "<b> Most Similar Restaurants: </b>"))
+                       popup = paste("<b> Restaurant Name: </b>", sim_rest_df$Restaurant, "<br>",
+                                     "<b> Type: </b>", sim_rest_df$Cuisine, "<br>",
+                                     "<b> Address: </b>", sim_rest_df$Address, "<br>",
+                                     "<b> Most Similar Restaurants: </b>", sim_rest_df$Similar_Restaurant))
     })
     
     output$oyster <- renderImage({
