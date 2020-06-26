@@ -19,7 +19,8 @@ c("dplyr",
   "fields",
   "cluster",
   "rgl",
-  "scales"
+  "scales",
+  "reshape2" # melt function
   ) -> package_names  
 for(package_name in package_names) {
   if(!is.element(package_name, installed.packages()[,1])) {
@@ -366,9 +367,11 @@ ggplot(td_gamma_wide5, aes(x = document, y = `3`)) +
        y = "Gamma",
        title = "Gamma Values of Restaurants Assigned to Topic 3",
        subtitle = "According to topic_model5")
+```
 
 
-# creating a euclidean distance matrix
+# Creating a Euclidean Distance Matrix
+```{r}
 library(tidyverse)
 column_to_rownames(td_gamma_wide, var = "document") -> td_gamma_test
 
@@ -508,17 +511,9 @@ Now that we have our distance matrix properly labeled with the corresponding res
 ```{r}
 distmatrix_df <- as.data.frame(distmatrix2)
 
-distmatrix_df %>%
-  # 2 = column
-  apply(., 2, sort, decreasing = FALSE) %>%
-  as.data.frame() %>% 
-  top_n(-10, 1:111) %>% View()
-
 # now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants) ## dont do yet
 
-# distmatrix_df[distmatrix_df == 0] <- NA
-
-# may need to get df into a long format
+# need to get df into a long format
 longdf <- tibble::rownames_to_column(distmatrix_df, "Similar_Restaurant")
 longdf <- melt(longdf)
 # changing the column names
@@ -533,14 +528,14 @@ longdf <- longdf[,-(4:5)]
 # only care about distances greater than 0 (otherwise we'll get the restaurant being observed as a similar restaurant) 
 longdf <- longdf %>% 
   arrange(Restaurant, Distance) %>% 
-  filter(Distance > 0) %>% View
+  filter(Distance > 0)
 
 # getting the top 5 lowest distances
 similar <- longdf %>% 
   group_by(Restaurant) %>% 
   top_n(-5, Distance)
 
-# for now... pasting list of similar restaurant names into a column with the respective restaurant
+# for now... pasting list of the 5 similar restaurant names into a column with the respective restaurant
 similar <- aggregate(similar$Similar_Restaurant, list(similar$Restaurant), paste, collapse = ", ")
 
 # renaming column
@@ -554,8 +549,17 @@ sim_rest_df <- sim_rest_df[,-(3:4)]
 
 # renaming column
 colnames(sim_rest_df)[2] <- "Similar_Restaurant"
+
+#saveRDS(sim_rest_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df")
+ 
+#write.csv(sim_rest_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df.csv")
+
 # now we can put this into the app (replace complete_df_app with sim_rest_df)
 ```
+
+
+
+
 
 
 
