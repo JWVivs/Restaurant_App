@@ -6,6 +6,9 @@ library(dplyr)
 # reading in custom_theme
 custom_theme <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/custom_theme")
 
+# features everything complete_df_app has plus the similar restaurants
+sim_rest_df <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df")
+
 # complete_df_app has addresses needed for map (compatible with 6th deisgn for app)
 complete_df_app <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app")
 
