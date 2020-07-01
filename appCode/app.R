@@ -8,9 +8,16 @@ custom_theme <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/c
 
 # features everything complete_df_app has plus the similar restaurants
 sim_rest_df <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df")
+# same as above, but includes NYC restaurants
+sim_rest_df_nyc <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_nyc")
+# unlike above, we now have no duplicated restaurants in the Similar_Restaurants column (i.e. franchises with same menu)
+# this is the final, and complete df required going forward
+sim_rest_df_noadd <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_noadd")
 
 # complete_df_app has addresses needed for map (compatible with 6th deisgn for app)
 complete_df_app <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app")
+# NYC restaurants added
+complete_df_nyc_app2 <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app2")
 
 # boston_add contains the coordinates
 boston_add <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/boston_addresses.csv")
@@ -450,6 +457,102 @@ server <- function(input, output){
                                      "<b> Type: </b>", sim_rest_df$Cuisine, "<br>",
                                      "<b> Address: </b>", sim_rest_df$Address, "<br>",
                                      "<b> Most Similar Restaurants: </b>", sim_rest_df$Similar_Restaurant))
+    })
+    
+    output$oyster <- renderImage({
+        return(list(src = "./appCode/www/oyster.png", contentType = "image/png", height = "auto", width = "230px"))
+    }, deleteFile = FALSE)
+    
+}
+
+shinyApp(ui = ui, server = server)
+
+##########################
+
+### 7th design for app ### features NYC restaurants ### no more repeated franchises for "Most Similar Restaurants" info
+
+ui <- dashboardPage(
+    dashboardHeader(title = "Sales Forecasting Tool",
+                    titleWidth = 235),
+    
+    # Sidebar content
+    dashboardSidebar(imageOutput("oyster", height = "auto"),
+                     sidebarMenu(
+                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                         menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
+                         selectInput("city", label = "City",
+                                     choices = c("Boston", "Portland", "Charleston", "New York City")),
+                         actionButton(inputId = "reset_view", label = "Reset View")
+                     )),
+    
+    # Body content
+    dashboardBody(custom_theme,
+                  tags$head(tags$style(HTML('
+                                            /* logo */
+                                            .skin-blue .main-header .logo {
+                                            color: #01244a;
+                                            }'))),
+                  tabItems(
+                      tabItem(tabName = "dashboard",
+                              fluidRow(box(width = 12, leafletOutput(outputId = "mymap", height = 875)))),
+                      tabItem(tabName = "appinfo",
+                              h1("App Instructions"),
+                              h3("Select a city from the drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
+                              h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."))
+                  )))
+
+
+server <- function(input, output){
+    v <- reactiveValues()
+    
+    observeEvent(input$reset_view, {
+        v$lng <- -75
+        v$lat <- 38
+        v$zoom <- 6
+    })
+    
+    observeEvent(input$city, {
+        v$lng <- if(input$city == "Boston") {
+            -71.05
+        } else if(input$city == "Portland") {
+            -70.25
+        } else if(input$city == "Charleston") {
+            -79.92
+        } else if(input$city == "New York City") {
+            -73.87
+        }
+        
+        v$lat <- if(input$city == "Boston") {
+            42.35
+        } else if(input$city == "Portland") {
+            43.65
+        } else if(input$city == "Charleston") {
+            32.78
+        } else if(input$city == "New York City") {
+            40.81
+        }
+        
+        v$zoom <- if(input$city == "Boston") {
+            11
+        } else if(input$city == "Portland") {
+            11
+        } else if(input$city == "Charleston") {
+            11
+        } else if(input$city == "New York City") {
+            11
+        }
+    })
+    
+    output$mymap <- renderLeaflet({
+        sim_rest_df_noadd %>%
+            leaflet() %>%
+            addTiles() %>%
+            setView(v$lng, v$lat, v$zoom) %>%
+            addMarkers(clusterOptions = markerClusterOptions(), 
+                       popup = paste("<b> Restaurant Name: </b>", sim_rest_df_noadd$Restaurant, "<br>",
+                                     "<b> Type: </b>", sim_rest_df_noadd$Cuisine, "<br>",
+                                     "<b> Address: </b>", sim_rest_df_noadd$Address, "<br>",
+                                     "<b> Most Similar Restaurants: </b>", sim_rest_df_noadd$Similar_Restaurant))
     })
     
     output$oyster <- renderImage({
