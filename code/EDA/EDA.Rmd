@@ -40,6 +40,11 @@ options(scipen = 999)
 complete_df <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df.csv")
 complete_df_app <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app.csv")
 complete_df_app2 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app2.csv")
+
+# NYC restaurants added
+complete_df_nyc <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc.csv")
+complete_df_nyc_app <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app.csv")
+complete_df_nyc_app2 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app2.csv")
 ```
 
 
@@ -120,7 +125,7 @@ library(stringr)
 library(tidytext)
 
 # address instead of restaurant due to franchises
-tm_df <- complete_df %>%
+tm_df <- complete_df_nyc %>%
   mutate(Address = factor(Address, levels = unique(Address)))
 
 # text pre-processing
@@ -415,7 +420,8 @@ Note: this originates from our original 'topic_model', which used 'menu_dfm'. 'm
 di <- dist(menu_dfm2, method = "euclidean")
 tree <- hclust(di, method = "ward.D")
 # using restaurant name as label; complete_df_app2 accounts for duped restaurant names with part of address added
-plot(tree, labels = complete_df_app2$Restaurant)
+par(cex = 0.7)
+plot(tree, labels = complete_df_nyc_app2$Restaurant)
 rect.hclust(tree, k = 3, border = "red")
 ```
 Franchises (same menu) are clustered together, which is a good sign. Double-checked the distmatrix and their Euclidean distances are properly valued (e.g. franchises with the same menu have distances of 0).
@@ -428,7 +434,7 @@ td_gamma_wideNames <- td_gamma_wide
 colnames(td_gamma_wideNames)[1] <- "Address"
 
 # now we have the correct order of names to add to the distance matrix
-td_euc <- merge(td_gamma_wideNames, complete_df_app2, by = "Address")
+td_euc <- merge(td_gamma_wideNames, complete_df_nyc_app2, by = "Address")
 
 # making a dupe of it
 distmatrix2 <- distmatrix
@@ -437,72 +443,99 @@ distmatrix2 <- distmatrix
 dput(td_euc$Restaurant)
 
 # changing the column names to the corresponding restaurant name
-colnames(distmatrix2) <- c("Ostra", "Legal C Bar", "Aura", "Legal Osteria", "The Boathouse 10", 
+colnames(distmatrix2) <- c("Ostra", "Legal C Bar", "Tracks Raw Bar & Grill", "Aura", "Luke's Lobster 1", 
+"Legal Osteria", "City Crab & Seafood Co.", "The Boathouse 10", 
 "Hank's Seafood Restaurant", "Legal Sea Foods 100", "Harborside Grill and Patio", 
-"Kipo's", "Susan's Fish N Chips", "Anson", "Stockyard", "Boston Chops", 
-"Morse Fish Company", "Charleston Crab House 145", "Captain Marden's Seafoods", 
+"The Wayfarer", "North End Grill", "El Palacio Seafood Market", 
+"Kipo's", "Dardanel", "Meltemi", "Fuleen Seafood", "Lobster Boat Restaurant", 
+"Lox NYC", "Harlow", "Fish Market", "Susan's Fish N Chips", "Le Jardin Bistro", 
+"The John Dory Oyster Bar", "Anson", "Oceana", "The Capital Grille", 
+"City Lobster & Steakhouse", "Silver Star Restaurant", "Hunt & Fish Club", 
+"Estiatorio Milos", "Russ & Daughters Cafe", "Mastro's Steakhouse", 
+"Umberto's Clam House", "Atlantic Grill East", "Stockyard", "Boca Chica", 
+"Boston Chops", "The Boil", "South Beach Restaurant & Lounge", 
+"Live Bait", "Bar Belly", "Morse Fish Company", "Avra", "Lure Fish Bar", 
+"Charleston Crab House 145", "Sable's", "Marisco Centro", "Captain Marden's Seafoods", 
 "Walter's", "No Name Restaurant", "James Hook & Co Lobsters", 
-"Blackstone Grill", "Pearlz Oyster Bar 153", "Long John Silver's", 
-"Central Wharf Co.", "Cypress Restaurant", "Blossom", "Himalayan Bistro", 
-"Phu-Ket Thai Restaurant", "Fleet Landing", "The Tap", "The Crab Shack 1901", 
-"Captain D's 1936", "The Daily Catch 2", "The Upper Crust Pizzeria", 
-"Tia's", "Amen Street Fish & Rawbar", "Hyman's Seafood", "The Falmouth Sea Grill", 
-"75 on Liberty Wharf", "LTK", "The Lobster Shack", "Alfredo's Italian Kitchen", 
-"GaGa Seafood", "DiMillo's Floating Restaurant & Marina", "Legal Sea Foods 255", 
-"Legal Sea Foods 26", "Off the Boat", "Four Winds Seafood Grille", 
-"East Ocean City", "Saigon Seafood Restaurant", "Legal Harborside", 
-"Brother's Crawfish", "Waterline", "Yankee Lobster", "Supreme House of Pizza", 
-"The Daily Catch 323", "Street & Co.", "Durgin Park", "A W Shuck's Seafood", 
-"Captain Fishbones", "The Boathouse 38", "Weathervane Seafood Restaurant", 
-"Row 34", "Coast", "Oceanaire", "Captain D's 4008", "Arboretum Pizza Grill", 
+"Blackstone Grill", "Strip House", "Bubba Gump Shrimp Co.", "Bubba Gump Shrimp Co. 1501", 
+"Pearlz Oyster Bar 153", "Flex Mussels", "Flex Mussels 154", 
+"Long John Silver's", "Blue Fin", "The Sea Fire Grill", "Francisco's Centro Vasco", 
+"Red Hook Lobster Pound", "Central Wharf Co.", "Red Hook Lobster Pound 16", 
+"La Pulperia", "Cypress Restaurant", "ZZ's Clam Bar", "Crepes du Nord", 
+"Blossom", "Cavatappo Grill", "Cafe Espanol", "Cafe Espanol 172", 
+"Himalayan Bistro", "Flex Mussels", "Flex Mussels 174", "Thalassa", 
+"JJR Highridge Fishery", "Pearl Oyster Bar", "Claw Daddy's", 
+"Phu-Ket Thai Restaurant", "Fleet Landing", "The Tap", "Kellari Taverna", 
+"The Crab Shack 1901", "Captain D's 1936", "Mare Seafood", "The Daily Catch 2", 
+"The Upper Crust Pizzeria", "Il Pesce", "Tia's", "Anassa Taverna", 
+"Pee Dee Steak House", "Wai Cafe", "Amen Street Fish & Rawbar", 
+"Clambakes By Jim Sanford", "Luke's Lobster", "Luke's Lobster 207", 
+"Cevich", "Miramar", "BLT Fish", "Sparks Steak House", "Iron Sushi", 
+"V Bar", "Hyman's Seafood", "The Falmouth Sea Grill", "Ben & Jack's Steakhouse", 
+"Ben & Jack's Steakhouse 219", "Pier A", "Pings", "75 on Liberty Wharf", 
+"Ed's Lobster Bar", "Fish Tag", "LTK", "The Lobster Shack", "Ed's Lobster Bar Cart", 
+"La Gioconda", "Taverna Kyclades", "Jeremy's Ale House", "Bait & Hook", 
+"Ricardo Ocean Grill", "Hurley's Saloon", "Joe's Crab Shack", 
+"Joe's Crab Shack 2349", "Marea", "Eighteen Restaurant", "Luke's Lobster", 
+"Luke's Lobster 242", "Alfredo's Italian Kitchen", "Lighthouse Fish Market & Restaurant", 
+"Telio", "Ma Dukes Manhattan Island Seafood", "GaGa Seafood", 
+"DiMillo's Floating Restaurant & Marina", "L&W Oyster Co.", "Ben & Jack's Steakhouse", 
+"Legal Sea Foods 255", "Ben & Jack's Steakhouse 255", "Legal Sea Foods 26", 
+"Off the Boat", "Luke's Lobster", "Four Winds Seafood Grille", 
+"Luke's Lobster 26", "East Ocean City", "Saigon Seafood Restaurant", 
+"Legal Harborside", "Chicken House", "Brother's Crawfish", "Virgola", 
+"Ditch Plains", "Lok Sing Seafood Restaurant", "Waterline", "Charlie Palmer Steak", 
+"Joseph's", "Red & Gold Crab Shack", "Yankee Lobster", "Joe's Crab Shack", 
+"Joe's Crab Shack 301", "Tulip Indian Restaurant", "Blue Water Grill", 
+"Aldea - Quick-Service (Lunch)", "Supreme House of Pizza", "212 Steakhouse", 
+"CajunSea", "Bay Kitchen Bar", "The Daily Catch 323", "Asian Diet Food - Broadway", 
+"Babalu", "Street & Co.", "Prime 333", "Durgin Park", "La Marina", 
+"A W Shuck's Seafood", "Captain Fishbones", "Crown Fried Chicken", 
+"Red Hook Lobster Pound", "Alaska Fish Market", "Maloney & Porcelli", 
+"The Boathouse 38", "Weathervane Seafood Restaurant", "Amber Sushi (28th St)", 
+"Row 34", "Coast", "Burger & Lobster", "Seamore?s Nolita", "Seafood King Fish Market", 
+"Sagaponack", "Oceanaire", "Captain D's 4008", "Esca", "Arboretum Pizza Grill", 
 "Rincon Limeno Restaurant", "Charleston Crab House 41", "Union Oyster House", 
-"Thai North Catering", "Fish", "Bubor Cha Cha", "Nick's House of Pizza & Seafood", 
-"China Bo ($1 Chinese Rice/#1 Chinese Food)", "Fire House Seafood", 
-"New Jumbo Seafood", "J's Oyster", "Jasper White's Summer Shack", 
+"Calle 174 Pescaderia (fka Sea Flower)", "The Clam", "Junior's Seafood", 
+"Mid Atlantic Fish Market", "Luke's Lobster", "Luke's Lobster 426", 
+"Thai North Catering", "Ed's Chowder House", "Fish", "Bubor Cha Cha", 
+"Barchetta", "Nick's House of Pizza & Seafood", "Kim's Aunt Kitchen Cart", 
+"Albert's Mofongo", "Caridad", "Atlantic Grill Lincoln Center", 
+"China Bo ($1 Chinese Rice/#1 Chinese Food)", "East Bay Diner", 
+"Fire House Seafood", "New Jumbo Seafood", "J's Oyster", "Jasper White's Summer Shack", 
 "Island Creek Oyster Bar", "Locklear's Fine Seafood", "Miel", 
-"Captain D's 5130", "Hoshiya Sushi", "The Boathouse 549", "B&G Oysters", 
-"Legal Crossing", "Chart House", "Neptune Oyster", "Captain D's 6326", 
-"Lorenz Island Kuisine", "New Golden Gate", "24 Hour Pizza Delivery", 
-"75 Chestnut", "Luke's Lobster", "Royal Roast Beef and Seafood", 
-"Atlantic Fish Company", "L'Espalier", "Abe & Louie's Steakhouse", 
-"Boston Sail Loft", "Crab Shack", "Chau Chow City", "Huff's Seafood", 
-"The Crab Shack 8486", "KO Pies", "Barking Crab", "Pearlz Oyster Bar 9", 
+"El Puerto Seafood & Fish Market", "Captain D's 5130", "Benjamin Steakhouse", 
+"Hoshiya Sushi", "Three Ocean", "Wild Edibles", "Caviar Russe", 
+"Barney Greengrass", "The Boathouse 549", "Nerai", "B&G Oysters", 
+"Tommy Bahama", "Legal Crossing", "The Mermaid Inn", "The Mermaid Inn 568", 
+"A Taste Of Seafood", "Ichiumi", "Chart House", "Bombay's Indian Restaurant", 
+"Sevilla", "Trattoria iL Gusto (Formerly Pesce & Pasta)", "Neptune Oyster", 
+"Captain D's 6326", "Docks", "Mary's Fish Camp", "Barfish Bistro", 
+"Lorenz Island Kuisine", "New Golden Gate", "Markt Restaurant", 
+"Famous Fish Market", "Luke's Lobster", "24 Hour Pizza Delivery", 
+"Luke's Lobster 685", "Asian Diet Food - John St.", "Harp Raw Bar & Grill", 
+"The Claw", "The Lobster Place", "75 Chestnut", "Luke's Lobster 75", 
+"Beluga Bar by Caviarteria", "Royal Roast Beef and Seafood", 
+"Black Crescent", "Atlantic Fish Company", "Crispin's", "Grey Lady", 
+"Terrace Fish & Chips", "Joon's Westside Fish", "L'Espalier", 
+"Cafe Espanol", "Cafe Espanol 78", "Abe & Louie's Steakhouse", 
+"Smith & Wollensky", "Boston Sail Loft", "Rosie O'Grady's", "Crab Shack", 
+"White Oak", "Thalia", "Chau Chow City", "Huff's Seafood", "The Palm Too", 
+"The Crab Shack 8486", "KO Pies", "Cucina Di Pesce", "Molyvos", 
+"The Kitchen Sink", "Catch NYC", "Barking Crab", "Bangkok Grand Palace", 
+"Grand Central Oyster Bar", "Beekman Beer Garden", "Redeye Grill", 
+"Pearlz Oyster Bar 9", "Lobster Smack", "Morton's The Steakhouse", 
 "Towne Stove and Spirits", "Gilbert's Chowder House", "Old Port Sea Grill & Raw Bar", 
-"Bubba Gump Shrimp Co.", "McCormick & Schmick's")
+"Luke's Lobster", "Luke's Lobster 93", "Pisacane Fish & Seafood", 
+"Crave Fishbar", "Upstate", "Benvenuto Caffe", "The Mermaid Inn", 
+"The Mermaid Inn 96", "El Rey de la Caridad", "Amsterdam Ave Fish", 
+"Bubba Gump Shrimp Co. 99", "JJ Sushi Cafe", "McCormick & Schmick's", 
+"Urban Lobster Shack On Wheels", "Red Hook Lobster Pound 365", 
+"Frying Pan", "North River Lobster Company", "Harbour Lights", 
+"The Water Club", "The Crow's Nest")
 
 # likewise for row names
-rownames(distmatrix2) <- c("Ostra", "Legal C Bar", "Aura", "Legal Osteria", "The Boathouse 10", 
-"Hank's Seafood Restaurant", "Legal Sea Foods 100", "Harborside Grill and Patio", 
-"Kipo's", "Susan's Fish N Chips", "Anson", "Stockyard", "Boston Chops", 
-"Morse Fish Company", "Charleston Crab House 145", "Captain Marden's Seafoods", 
-"Walter's", "No Name Restaurant", "James Hook & Co Lobsters", 
-"Blackstone Grill", "Pearlz Oyster Bar 153", "Long John Silver's", 
-"Central Wharf Co.", "Cypress Restaurant", "Blossom", "Himalayan Bistro", 
-"Phu-Ket Thai Restaurant", "Fleet Landing", "The Tap", "The Crab Shack 1901", 
-"Captain D's 1936", "The Daily Catch 2", "The Upper Crust Pizzeria", 
-"Tia's", "Amen Street Fish & Rawbar", "Hyman's Seafood", "The Falmouth Sea Grill", 
-"75 on Liberty Wharf", "LTK", "The Lobster Shack", "Alfredo's Italian Kitchen", 
-"GaGa Seafood", "DiMillo's Floating Restaurant & Marina", "Legal Sea Foods 255", 
-"Legal Sea Foods 26", "Off the Boat", "Four Winds Seafood Grille", 
-"East Ocean City", "Saigon Seafood Restaurant", "Legal Harborside", 
-"Brother's Crawfish", "Waterline", "Yankee Lobster", "Supreme House of Pizza", 
-"The Daily Catch 323", "Street & Co.", "Durgin Park", "A W Shuck's Seafood", 
-"Captain Fishbones", "The Boathouse 38", "Weathervane Seafood Restaurant", 
-"Row 34", "Coast", "Oceanaire", "Captain D's 4008", "Arboretum Pizza Grill", 
-"Rincon Limeno Restaurant", "Charleston Crab House 41", "Union Oyster House", 
-"Thai North Catering", "Fish", "Bubor Cha Cha", "Nick's House of Pizza & Seafood", 
-"China Bo ($1 Chinese Rice/#1 Chinese Food)", "Fire House Seafood", 
-"New Jumbo Seafood", "J's Oyster", "Jasper White's Summer Shack", 
-"Island Creek Oyster Bar", "Locklear's Fine Seafood", "Miel", 
-"Captain D's 5130", "Hoshiya Sushi", "The Boathouse 549", "B&G Oysters", 
-"Legal Crossing", "Chart House", "Neptune Oyster", "Captain D's 6326", 
-"Lorenz Island Kuisine", "New Golden Gate", "24 Hour Pizza Delivery", 
-"75 Chestnut", "Luke's Lobster", "Royal Roast Beef and Seafood", 
-"Atlantic Fish Company", "L'Espalier", "Abe & Louie's Steakhouse", 
-"Boston Sail Loft", "Crab Shack", "Chau Chow City", "Huff's Seafood", 
-"The Crab Shack 8486", "KO Pies", "Barking Crab", "Pearlz Oyster Bar 9", 
-"Towne Stove and Spirits", "Gilbert's Chowder House", "Old Port Sea Grill & Raw Bar", 
-"Bubba Gump Shrimp Co.", "McCormick & Schmick's")
+rownames(distmatrix2) <- colnames(distmatrix2)
 ```
 Now that we have our distance matrix properly labeled with the corresponding restaurant names, we can move on to making a data frame featuring the lowest Euclidean distances.
 
@@ -510,20 +543,24 @@ Now that we have our distance matrix properly labeled with the corresponding res
 # Creating a Data Frame with the Lowest Euclidean Distances
 ```{r}
 distmatrix_df <- as.data.frame(distmatrix2)
+distmatrix_df <- tibble::rownames_to_column(distmatrix_df, "Restaurant")
+distmatrix_df[,1] <- colnames(distmatrix2)
 
-# now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants) ## dont do yet
+# now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants)
 
 # need to get df into a long format
 longdf <- tibble::rownames_to_column(distmatrix_df, "Similar_Restaurant")
 longdf <- melt(longdf)
 # changing the column names
+longdf <- longdf[,-1]
+colnames(longdf)[1] <- "Similar_Restaurant"
 colnames(longdf)[2] <- "Restaurant"
 colnames(longdf)[3] <- "Distance"
 
-longdf <- merge(longdf, complete_df_app2, by = "Restaurant")
+longdf <- merge(longdf, complete_df_nyc_app2, by = "Restaurant")
 
 # getting rid of unnecessary columns
-longdf <- longdf[,-(4:5)]
+longdf <- longdf[,-4]
 # arranging by restaurant and lowest distance
 # only care about distances greater than 0 (otherwise we'll get the restaurant being observed as a similar restaurant) 
 longdf <- longdf %>% 
@@ -538,29 +575,191 @@ similar <- longdf %>%
 # for now... pasting list of the 5 similar restaurant names into a column with the respective restaurant
 similar <- aggregate(similar$Similar_Restaurant, list(similar$Restaurant), paste, collapse = ", ")
 
-# renaming column
+# renaming columns
 colnames(similar)[1] <- "Restaurant"
+colnames(similar)[2] <- "Similar_Restaurant"
 
 # merging the similar restaurants with complete_df_app2
-sim_rest_df <- merge(similar, complete_df_app2, by = "Restaurant")
+sim_rest_df <- merge(similar, complete_df_nyc_app2, by = "Restaurant")
 
 # getting rid of unnecessary columns
-sim_rest_df <- sim_rest_df[,-(3:4)]
+sim_rest_df <- sim_rest_df[,-3]
 
-# renaming column
-colnames(sim_rest_df)[2] <- "Similar_Restaurant"
-
-#saveRDS(sim_rest_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df")
+#saveRDS(sim_rest_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_nyc")
  
-#write.csv(sim_rest_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df.csv")
+#write.csv(sim_rest_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_nyc.csv")
 
-# now we can put this into the app (replace complete_df_app with sim_rest_df)
+# now we can put this into the app (replace complete_df_app with sim_rest_df_nyc)
 ```
+This works; however, there are couple of issues:
+
+1. Restaurant names have parts of the address appended to them when viewing in the app (this was initially done to help distinguish between which restaurant was being identified regarding franchises)
+
+2. When looking at the most similar restaurants, the franchises will be included (e.g. Restaurant A is most similar to "The Daily Catch #1", "The Daily Catch #2", etc.). Since the franchises have identical menus, we know they will be just as similar to the restaurant we are observing, so we need to remove the duplicates.
+
+Below is the beginning of another distance matrix, but we will be leaving the names as they are (no parts of the address appended to the franchise). This will be beneficial later when integrating into the app.
 
 
+# Distance Matrix With Restaurant Names as Is
+```{r}
+# now we have the correct order of names to add to the distance matrix; part of address not added to these restaurant names
+td_euc_noadd <- merge(td_gamma_wideNames, complete_df_nyc_app, by = "Address")
+
+# making a dupe of it
+distmatrix_noadd <- distmatrix
+
+# copying these restaurant names
+dput(td_euc_noadd$Restaurant)
+
+# changing the column names to the corresponding restaurant name
+colnames(distmatrix_noadd) <- c("Ostra", "Legal C Bar", "Tracks Raw Bar & Grill", "Aura", "Luke's Lobster", 
+"Legal Osteria", "City Crab & Seafood Co.", "The Boathouse", 
+"Hank's Seafood Restaurant", "Legal Sea Foods", "Harborside Grill and Patio", 
+"The Wayfarer", "North End Grill", "El Palacio Seafood Market", 
+"Kipo's", "Dardanel", "Meltemi", "Fuleen Seafood", "Lobster Boat Restaurant", 
+"Lox NYC", "Harlow", "Fish Market", "Susan's Fish N Chips", "Le Jardin Bistro", 
+"The John Dory Oyster Bar", "Anson", "Oceana", "The Capital Grille", 
+"City Lobster & Steakhouse", "Silver Star Restaurant", "Hunt & Fish Club", 
+"Estiatorio Milos", "Russ & Daughters Cafe", "Mastro's Steakhouse", 
+"Umberto's Clam House", "Atlantic Grill East", "Stockyard", "Boca Chica", 
+"Boston Chops", "The Boil", "South Beach Restaurant & Lounge", 
+"Live Bait", "Bar Belly", "Morse Fish Company", "Avra", "Lure Fish Bar", 
+"Charleston Crab House", "Sable's", "Marisco Centro", "Captain Marden's Seafoods", 
+"Walter's", "No Name Restaurant", "James Hook & Co Lobsters", 
+"Blackstone Grill", "Strip House", "Bubba Gump Shrimp Co.", "Peix Bar de Mariscos", 
+"Pearlz Oyster Bar", "Flex Mussels", "Le Bernardin", "Long John Silver's", 
+"Blue Fin", "The Sea Fire Grill", "Francisco's Centro Vasco", 
+"Red Hook Lobster Pound", "Central Wharf Co.", "St. Nicholas Fish Market", 
+"La Pulperia", "Cypress Restaurant", "ZZ's Clam Bar", "Crepes du Nord", 
+"Blossom", "Cavatappo Grill", "Cafe Espanol", "Jeffrey's Grocery", 
+"Himalayan Bistro", "Flex Mussels", "Crudo Vineria con Cucina", 
+"Thalassa", "JJR Highridge Fishery", "Pearl Oyster Bar", "Claw Daddy's", 
+"Phu-Ket Thai Restaurant", "Fleet Landing", "The Tap", "Kellari Taverna", 
+"The Crab Shack", "Captain D's", "Mare Seafood", "The Daily Catch", 
+"The Upper Crust Pizzeria", "Il Pesce", "Tia's", "Anassa Taverna", 
+"Pee Dee Steak House", "Wai Cafe", "Amen Street Fish & Rawbar", 
+"Clambakes By Jim Sanford", "Luke's Lobster", "Fish & Shrimp", 
+"Cevich", "Miramar", "BLT Fish", "Sparks Steak House", "Iron Sushi", 
+"V Bar", "Hyman's Seafood", "The Falmouth Sea Grill", "Ben & Jack's Steakhouse", 
+"Harlem Savour of Seafood Inc", "Pier A", "Pings", "75 on Liberty Wharf", 
+"Ed's Lobster Bar", "Fish Tag", "LTK", "The Lobster Shack", "Ed's Lobster Bar Cart", 
+"La Gioconda", "Taverna Kyclades", "Jeremy's Ale House", "Bait & Hook", 
+"Ricardo Ocean Grill", "Hurley's Saloon", "Joe's Crab Shack", 
+"Empire Steak House", "Marea", "Eighteen Restaurant", "Luke's Lobster", 
+"Murray's Sturgeon Shop", "Alfredo's Italian Kitchen", "Lighthouse Fish Market & Restaurant", 
+"Telio", "Ma Dukes Manhattan Island Seafood", "GaGa Seafood", 
+"DiMillo's Floating Restaurant & Marina", "L&W Oyster Co.", "Ben & Jack's Steakhouse", 
+"Legal Sea Foods", "Cowgirl SeaHorse", "Legal Sea Foods", "Off the Boat", 
+"Luke's Lobster", "Four Winds Seafood Grille", "Claw", "East Ocean City", 
+"Saigon Seafood Restaurant", "Legal Harborside", "Chicken House", 
+"Brother's Crawfish", "Virgola", "Ditch Plains", "Lok Sing Seafood Restaurant", 
+"Waterline", "Charlie Palmer Steak", "Joseph's", "Red & Gold Crab Shack", 
+"Yankee Lobster", "Joe's Crab Shack", "LoLo's Seafood Shack", 
+"Tulip Indian Restaurant", "Blue Water Grill", "Aldea - Quick-Service (Lunch)", 
+"Supreme House of Pizza", "212 Steakhouse", "CajunSea", "Bay Kitchen Bar", 
+"The Daily Catch", "Asian Diet Food - Broadway", "Babalu", "Street & Co.", 
+"Prime 333", "Durgin Park", "La Marina", "A W Shuck's Seafood", 
+"Captain Fishbones", "Crown Fried Chicken", "Red Hook Lobster Pound", 
+"Alaska Fish Market", "Maloney & Porcelli", "The Boathouse", 
+"Weathervane Seafood Restaurant", "Amber Sushi (28th St)", "Row 34", 
+"Coast", "Burger & Lobster", "Seamore?s Nolita", "Seafood King Fish Market", 
+"Sagaponack", "Oceanaire", "Captain D's", "Esca", "Arboretum Pizza Grill", 
+"Rincon Limeno Restaurant", "Charleston Crab House", "Union Oyster House", 
+"Calle 174 Pescaderia (fka Sea Flower)", "The Clam", "Junior's Seafood", 
+"Mid Atlantic Fish Market", "Luke's Lobster", "House of Seafood Express", 
+"Thai North Catering", "Ed's Chowder House", "Fish", "Bubor Cha Cha", 
+"Barchetta", "Nick's House of Pizza & Seafood", "Kim's Aunt Kitchen Cart", 
+"Albert's Mofongo", "Caridad", "Atlantic Grill Lincoln Center", 
+"China Bo ($1 Chinese Rice/#1 Chinese Food)", "East Bay Diner", 
+"Fire House Seafood", "New Jumbo Seafood", "J's Oyster", "Jasper White's Summer Shack", 
+"Island Creek Oyster Bar", "Locklear's Fine Seafood", "Miel", 
+"El Puerto Seafood & Fish Market", "Captain D's", "Benjamin Steakhouse", 
+"Hoshiya Sushi", "Three Ocean", "Wild Edibles", "Caviar Russe", 
+"Barney Greengrass", "The Boathouse", "Nerai", "B&G Oysters", 
+"Tommy Bahama", "Legal Crossing", "The Mermaid Inn", "Pudgie's/Nathans/Arthur Treacher's", 
+"A Taste Of Seafood", "Ichiumi", "Chart House", "Bombay's Indian Restaurant", 
+"Sevilla", "Trattoria iL Gusto (Formerly Pesce & Pasta)", "Neptune Oyster", 
+"Captain D's", "Docks", "Mary's Fish Camp", "Barfish Bistro", 
+"Lorenz Island Kuisine", "New Golden Gate", "Markt Restaurant", 
+"Famous Fish Market", "Luke's Lobster", "24 Hour Pizza Delivery", 
+"Villa Mosconi", "Asian Diet Food - John St.", "Harp Raw Bar & Grill", 
+"The Claw", "The Lobster Place", "75 Chestnut", "Luke's Lobster", 
+"Beluga Bar by Caviarteria", "Royal Roast Beef and Seafood", 
+"Black Crescent", "Atlantic Fish Company", "Crispin's", "Grey Lady", 
+"Terrace Fish & Chips", "Joon's Westside Fish", "L'Espalier", 
+"Cafe Espanol", "Mermaid Oyster Bar", "Abe & Louie's Steakhouse", 
+"Smith & Wollensky", "Boston Sail Loft", "Rosie O'Grady's", "Crab Shack", 
+"White Oak", "Thalia", "Chau Chow City", "Huff's Seafood", "The Palm Too", 
+"The Crab Shack", "KO Pies", "Cucina Di Pesce", "Molyvos", "The Kitchen Sink", 
+"Catch NYC", "Barking Crab", "Bangkok Grand Palace", "Grand Central Oyster Bar", 
+"Beekman Beer Garden", "Redeye Grill", "Pearlz Oyster Bar", "Lobster Smack", 
+"Morton's The Steakhouse", "Towne Stove and Spirits", "Gilbert's Chowder House", 
+"Old Port Sea Grill & Raw Bar", "Luke's Lobster", "Ashiya V Sushi", 
+"Pisacane Fish & Seafood", "Crave Fishbar", "Upstate", "Benvenuto Caffe", 
+"The Mermaid Inn", "Montes Trattoria", "El Rey de la Caridad", 
+"Amsterdam Ave Fish", "Bubba Gump Shrimp Co.", "JJ Sushi Cafe", 
+"McCormick & Schmick's", "Urban Lobster Shack On Wheels", "Grand Banks", 
+"Frying Pan", "North River Lobster Company", "Harbour Lights", 
+"The Water Club", "The Crow's Nest")
+```
+Now we need to make the row names match the column names. It wouldn't let me do this in its matrix format, so I'll convert it to a data frame and work on it from there.
 
 
+# Data Frame with Lowest Euclidean Distances & No Repeated Restaurants
+```{r}
+distmatrix_noadd_df <- as.data.frame(distmatrix_noadd)
+distmatrix_noadd_df <- tibble::rownames_to_column(distmatrix_noadd_df, "Restaurant")
+distmatrix_noadd_df[,1] <- colnames(distmatrix_noadd)
 
+# now we need to remove the zeroes, as the franchises are identical to each other (we want different, but similar restaurants)
+
+# need to get df into a long format
+longdf_noadd <- tibble::rownames_to_column(distmatrix_noadd_df, "Similar_Restaurant")
+longdf_noadd <- melt(longdf_noadd)
+# changing the column names
+longdf_noadd <- longdf_noadd[,-1]
+colnames(longdf_noadd)[1] <- "Similar_Restaurant"
+colnames(longdf_noadd)[2] <- "Restaurant"
+colnames(longdf_noadd)[3] <- "Distance"
+
+longdf_noadd <- merge(longdf_noadd, complete_df_nyc_app, by = "Restaurant")
+
+# getting rid of unnecessary columns
+longdf_noadd <- longdf_noadd[,-4]
+
+# gets rid of repeated franchises in Similar_Restaurants
+longdf_noadd <- longdf_noadd %>% 
+  distinct(Restaurant, Similar_Restaurant, Distance, .keep_all = TRUE)
+
+# arranging by restaurant and lowest distance
+# only care about distances greater than 0 (otherwise we'll get the restaurant being observed as a similar restaurant)
+longdf_noadd <- longdf_noadd %>% 
+  arrange(Restaurant, Distance) %>% 
+  filter(Distance > 0)
+
+# getting the top 5 lowest distances
+similar_noadd <- longdf_noadd %>% 
+  group_by(Restaurant) %>% 
+  top_n(-5, Distance)
+
+# for now... pasting list of the 5 similar restaurant names into a column with the respective restaurant
+similar_noadd <- aggregate(similar_noadd$Similar_Restaurant, list(similar_noadd$Restaurant), paste, collapse = ", ")
+
+# renaming columns
+colnames(similar_noadd)[1] <- "Restaurant"
+colnames(similar_noadd)[2] <- "Similar_Restaurant"
+
+# merging the similar restaurants with complete_df_app2
+sim_rest_df_noadd <- merge(similar_noadd, complete_df_nyc_app, by = "Restaurant")
+
+# getting rid of unnecessary columns
+sim_rest_df_noadd <- sim_rest_df_noadd[,-3]
+
+#saveRDS(sim_rest_df_noadd, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_noadd")
+ 
+#write.csv(sim_rest_df_noadd, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_noadd.csv")
+```
+sim_rest_df_noadd should serve as the final, and complete data frame for use in the app. It features no duplicates in Similar_Restaurants when we are observing the lowest Euclidean distances, and all of the restaurant names are as is (parts of the address not attached).
 
 
 
