@@ -38,6 +38,12 @@ df_charleston <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone
 # menu data
 charleston_final <- read.csv("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/charleston_final.csv")
 
+# nyc_add contains the coordinates
+nyc_add <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/nyc_addresses.csv")
+# df_nyc has the restaurant names and cuisine
+df_nyc <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/raw/df_nyc.csv")
+# menu data
+nyc_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/nyc_final.csv")
 ```
 
 
@@ -111,3 +117,44 @@ df_3_coord %>%
 
 map_3_cities
 ```
+
+
+# Making a map of Boston, Portland, Charleston, and NYC
+```{r}
+# binding each city's restaurant info
+df_4 <- rbind(df_boston, df_portland, df_charleston, df_nyc)
+
+# check for these strings, and attach the corresponding city name
+df_4 %>%
+  mutate(City = case_when(grepl(', MA', df_4$Address) ~ 'Boston', 
+                          grepl(', ME', df_4$Address) ~ 'Portland', 
+                          grepl(', SC', df_4$Address) ~ 'Charleston',
+                          grepl(', NY', df_4$Address) ~ 'New York City',)) -> df_4
+
+# saving for use in app
+#write.csv(df_4, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_4.csv")
+
+# binding each city's coordinate info
+df_4_coord <- rbind(boston_add, portland_add, charleston_add, nyc_add)
+
+# attaching city column to df_3_coord as well
+df_4_coord %>%
+  mutate(City = case_when(grepl(', MA', df_4_coord$Address) ~ 'Boston', 
+                          grepl(', ME', df_4_coord$Address) ~ 'Portland', 
+                          grepl(', SC', df_4_coord$Address) ~ 'Charleston',
+                          grepl(', NY', df_4_coord$Address) ~ 'New York City')) -> df_4_coord
+
+# saving for use in app
+#write.csv(df_4_coord, "C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_4_coord.csv")
+
+df_4_coord %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(clusterOptions = markerClusterOptions(), 
+             popup = paste(df_4$Restaurant, "<br>",
+                           df_4$Cuisine, "<br>",
+                           df_4$Address)) -> map_4_cities
+
+map_4_cities
+```
+
