@@ -19,22 +19,27 @@ library(car)
 boston_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/boston_final.csv")
 portland_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/portland_final.csv")
 charleston_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/charleston_final.csv")
+nyc_final <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/nyc_final.csv")
 
 # Checking for missing data in this data frame
 df_3 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_3.csv")
+
+# This includes NYC; checking for missing data (line 142)
+df_4 <- read.csv("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/df_4.csv")
 ```
 
 
 # Creating a complete data frame (contains menu, location, etc.)
 ```{r}
 # Complete data frame with all relevant menu info.
-complete_df <- do.call("rbind", list(boston_final, portland_final, charleston_final))
+complete_df <- do.call("rbind", list(boston_final, portland_final, charleston_final, nyc_final))
 
 # Check for these strings, and attach the corresponding city name
 complete_df %>%
   mutate(City = case_when(grepl(', MA', complete_df$Address) ~ 'Boston', 
                           grepl(', ME', complete_df$Address) ~ 'Portland', 
-                          grepl(', SC', complete_df$Address) ~ 'Charleston')) -> complete_df
+                          grepl(', SC', complete_df$Address) ~ 'Charleston',
+                          grepl(', NY', complete_df$Address) ~ 'New York City')) -> complete_df
 
 str(complete_df)
 
@@ -49,7 +54,7 @@ complete_df$Price <- as.numeric(gsub("[[:alpha:]|[:blank:]|,|+]", "", complete_d
 ```
 
 
-# Checking for missing data
+# Checking for missing data in df_3
 ```{r}
 cmp_df <- data.frame(unique(complete_df$Address))
 df3_new <- data.frame(unique(df_3$Address))
@@ -133,3 +138,121 @@ complete_df_app2[37,3] <- "The Daily Catch 323"
 #saveRDS(complete_df_app2, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app2")
 ```
 
+
+# Checking for missing data in df_4
+```{r}
+cmp_df <- data.frame(unique(complete_df$Address))
+df4_new <- data.frame(unique(df_4$Address))
+
+# converting from factor to character
+cmp_df$unique.complete_df.Address. <- as.character(cmp_df$unique.complete_df.Address.)
+
+df4_new$unique.df_4.Address. <- as.character(df4_new$unique.df_4.Address.)
+
+#rename
+colnames(cmp_df) <- c("place")
+colnames(df4_new) <- c("place")
+
+# verifying structure is correct (character)
+str(cmp_df)
+str(df4_new)
+
+# 19 rows of missing data (12 of which are from NYC)
+## This is because these restaurants did not have menu data available to pull
+## Need to remove from data; will use complete_df (111 restaurants) going forward
+missing_data <- anti_join(df4_new, cmp_df, by = "place")
+missing_data
+```
+
+
+# Fixing an Address String and Saving the Complete Data Frame
+```{r}
+# Checking for a particular address string
+complete_df[complete_df$Address %like% "Location",]
+
+# Fixing the address (says "Location Varies", but still pulls correct address info. Updating address.)
+complete_df <- complete_df %>% 
+  mutate(., Address = recode(Address, "'Location Varies Boston, MA, 02201' = '15 Court Square, Boston, MA 02108'"))
+
+# same for NYC address (Red Hook Lobster Pound)
+complete_df <- complete_df %>% 
+  mutate(., Address = recode(Address, "'Location Varies New York, NY, 10022' = '365 Park Ave, New York, NY 10154'"))
+
+#write.csv(complete_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc.csv")
+
+# this will preserve the proper format for the variables
+#saveRDS(complete_df, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc")
+
+# This data frame has each unique restaurant address to use for mapping in the app.
+complete_df_nyc_app <- data.frame(unique(complete_df[,c(2,3,6:9)]))
+
+# resetting the row names
+row.names(complete_df_nyc_app) <- NULL
+
+# Silver Star Restaurant is duped
+complete_df_nyc_app <- complete_df_nyc_app[-131,]
+
+#write.csv(complete_df_nyc_app, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app.csv")
+
+# this will preserve the proper format for the variables
+#saveRDS(complete_df_nyc_app, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app")
+```
+
+
+# Appending Parts of Address to Franchises
+```{r}
+n_occur <- data.frame(table(complete_df_nyc_app$Restaurant))
+# finding restaurants with the same name
+n_occur[n_occur$Freq > 1,]
+
+complete_df_nyc_app2 <- complete_df_nyc_app
+# resetting the row names
+row.names(complete_df_nyc_app2) <- NULL
+
+# appending part of address to distinguish between them
+complete_df_nyc_app2[94,2] <- "Captain D's 1936"
+complete_df_nyc_app2[100,2] <- "Captain D's 4008"
+complete_df_nyc_app2[104,2] <- "Captain D's 5130"
+complete_df_nyc_app2[106,2] <- "Captain D's 6326"
+complete_df_nyc_app2[88,2] <- "Charleston Crab House 145"
+complete_df_nyc_app2[101,2] <- "Charleston Crab House 41"
+complete_df_nyc_app2[5,2] <- "Legal Sea Foods 100"
+complete_df_nyc_app2[26,2] <- "Legal Sea Foods 255"
+complete_df_nyc_app2[27,2] <- "Legal Sea Foods 26"
+complete_df_nyc_app2[89,2] <- "Pearlz Oyster Bar 153"
+complete_df_nyc_app2[110,2] <- "Pearlz Oyster Bar 9"
+complete_df_nyc_app2[85,2] <- "The Boathouse 10"
+complete_df_nyc_app2[98,2] <- "The Boathouse 38"
+complete_df_nyc_app2[105,2] <- "The Boathouse 549"
+complete_df_nyc_app2[93,2] <- "The Crab Shack 1901"
+complete_df_nyc_app2[109,2] <- "The Crab Shack 8486"
+complete_df_nyc_app2[19,2] <- "The Daily Catch 2"
+complete_df_nyc_app2[37,2] <- "The Daily Catch 323"
+complete_df_nyc_app2[184,2] <- "Ben & Jack's Steakhouse 219"
+complete_df_nyc_app2[207,2] <- "Ben & Jack's Steakhouse 255"
+complete_df_nyc_app2[111,2] <- "Bubba Gump Shrimp Co. 99"
+complete_df_nyc_app2[148,2] <- "Bubba Gump Shrimp Co. 1501"
+complete_df_nyc_app2[161,2] <- "Cafe Espanol 172"
+complete_df_nyc_app2[284,2] <- "Cafe Espanol 78"
+complete_df_nyc_app2[150,2] <- "Flex Mussels 154"
+complete_df_nyc_app2[163,2] <- "Flex Mussels 174"
+complete_df_nyc_app2[197,2] <- "Joe's Crab Shack 2349"
+complete_df_nyc_app2[218,2] <- "Joe's Crab Shack 301"
+complete_df_nyc_app2[63,2] <- "Luke's Lobster 75"
+complete_df_nyc_app2[113,2] <- "Luke's Lobster 1"
+complete_df_nyc_app2[176,2] <- "Luke's Lobster 207"
+complete_df_nyc_app2[201,2] <- "Luke's Lobster 242"
+complete_df_nyc_app2[209,2] <- "Luke's Lobster 26"
+complete_df_nyc_app2[243,2] <- "Luke's Lobster 426"
+complete_df_nyc_app2[272,2] <- "Luke's Lobster 685"
+complete_df_nyc_app2[301,2] <- "Luke's Lobster 93"
+complete_df_nyc_app2[155,2] <- "Red Hook Lobster Pound 16"
+complete_df_nyc_app2[313,2] <- "Red Hook Lobster Pound 365"
+complete_df_nyc_app2[260,2] <- "The Mermaid Inn 568"
+complete_df_nyc_app2[307,2] <- "The Mermaid Inn 96"
+
+#write.csv(complete_df_nyc_app2, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app2.csv")
+
+# this will preserve the proper format for the variables
+#saveRDS(complete_df_nyc_app2, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_nyc_app2")
+```
