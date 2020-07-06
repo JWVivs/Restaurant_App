@@ -762,6 +762,41 @@ sim_rest_df_noadd <- sim_rest_df_noadd[,-3]
 sim_rest_df_noadd should serve as the final, and complete data frame for use in the app. It features no duplicates in Similar_Restaurants when we are observing the lowest Euclidean distances, and all of the restaurant names are as is (parts of the address not attached).
 
 
+# Count of Euclidean Distances
+```{r}
+longdf_distCount <- longdf_noadd %>% 
+  group_by(Restaurant) %>% 
+  filter(Distance > 0 & Distance < 0.15) %>% 
+  mutate(Count = n())
+
+# pasting list of the similar restaurant names into a column with the respective restaurant
+distCount <- aggregate(longdf_distCount$Similar_Restaurant, list(longdf_distCount$Restaurant), paste, collapse = ", ")
+
+# renaming columns
+colnames(distCount)[1] <- "Restaurant"
+colnames(distCount)[2] <- "Similar_Restaurant"
+
+# gets rid of repeated franchises in Similar_Restaurants
+distinctCount <- longdf_distCount %>% 
+  distinct(Restaurant, Count, .keep_all = TRUE)
+
+# merging the Count column with distCount
+eucdistCount <- merge(distinctCount, distCount, by = "Restaurant")
+
+# removing unnecessary columns
+eucdistCount <- eucdistCount[,-c(2:3)]
+
+# fixing column name
+colnames(eucdistCount)[8] <- "Similar_Restaurant"
+
+# reordering columns
+eucdistCount <- eucdistCount[,c(1,8,7,2,3,4,5,6)]
+
+#saveRDS(eucdistCount, "~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/eucdistCount")
+```
+The idea here is to generate a column that has a count for each restaurant regarding the number of times they have a Euclidean distance under a certain number. The restaurant with highest count would be considered the most similar to the list of restaurants used.
+
+
 
 
 ## Prior Use
