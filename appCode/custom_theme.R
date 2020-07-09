@@ -68,18 +68,18 @@ custom_theme <- shinyDashboardThemeDIY(
   ,boxShadowColor = "rgba(0,0,0,0)"
   ,boxTitleSize = 16
   ,boxDefaultColor = "rgb(255,255,255)"
-  ,boxPrimaryColor = "rgb(1,36,74)"
-  ,boxInfoColor = "rgb(255,0,0)"
+  ,boxPrimaryColor = "rgb(0,0,0)"
+  ,boxInfoColor = "rgb(0,0,0)"
   ,boxSuccessColor = "rgba(0,255,213,1)"
   ,boxWarningColor = "rgb(255,0,0)"
-  ,boxDangerColor = "rgb(255,88,55)"
+  ,boxDangerColor = "rgb(255,0,0)"
   
-  ,tabBoxTabColor = "rgb(255,0,0)"
+  ,tabBoxTabColor = "rgb(0,0,0)"
   ,tabBoxTabTextSize = 14
-  ,tabBoxTabTextColor = "rgb(1,36,74)"
+  ,tabBoxTabTextColor = "rgb(255,0,0)"
   ,tabBoxTabTextColorSelected = "rgb(1,36,74)"
   ,tabBoxBackColor = "rgb(255,0,0)"
-  ,tabBoxHighlightColor = "rgb(255,0,0)"
+  ,tabBoxHighlightColor = "rgb(230,230,230)"
   ,tabBoxBorderRadius = 5
   
   ### inputs
@@ -100,9 +100,9 @@ custom_theme <- shinyDashboardThemeDIY(
   
   ### tables
   ,tableBackColor = "rgb(255,255,255)"
-  ,tableBorderColor = "rgb(255,0,0)"
-  ,tableBorderTopSize = 1
-  ,tableBorderRowSize = 1
+  ,tableBorderColor = "rgb(255,255,255)"
+  ,tableBorderTopSize = 2
+  ,tableBorderRowSize = 5
   
 )
 
