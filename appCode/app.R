@@ -610,7 +610,7 @@ ui <- dashboardPage(
                               h3("Select a city from the 'City' drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
                               h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."),
                               h2("Restaurant Lookup:"),
-                              h3("Search for and select a restaurant using the 'Restaurant' input box to see the restaurants that are similar. The number of restaurants it is similar to can be found in the 'Count' column. You can search for multiple restaurants, and can delete a selected restaurant by clicking on it and pressing the 'backspace' button."),
+                              h3("Search for and select a restaurant using the 'Restaurant' input box to see the restaurants that are similar. The number of similar restaurants can be found in the 'Count' column. You can search for multiple restaurants, and can delete a selected restaurant by clicking on it and pressing the backspace key."),
                               h3("Click on the arrows next to the column names to sort in alphabetical/numerical order."),
                               h2("Similarity Tool:"),
                               h3("Using the range slider, you can filter the available restaurants based on the number of restaurants they are similar to (the 'Count' column). The 'Count' column is color-coded, whereby the color red indicates a lower number of similar restaurants, and the color green indicates a higher number of similar restaurants.")),
