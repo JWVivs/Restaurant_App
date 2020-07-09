@@ -3,6 +3,7 @@ library(shinydashboard)
 library(leaflet)
 library(dplyr)
 library(ggplot2)
+library(tableHTML)
 
 # reading in custom_theme
 custom_theme <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/custom_theme")
@@ -580,12 +581,17 @@ ui <- dashboardPage(
                      sidebarMenu(
                          menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                          menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
-                         menuItem("Similarity Tool", tabName = "simtool", icon = icon("chart-bar")),
+                         menuItem("Restaurant Lookup", tabName = "restlookup", icon = icon("search")),
+                         menuItem("Similarity Tool", tabName = "simtool", icon = icon("sort-amount-up")),
                          selectInput("city", label = "City",
                                      choices = c("Boston", "Portland", "Charleston", "New York City")),
                          actionButton(inputId = "reset_view", label = "Reset View"),
                          selectizeInput("restaurant", label = "Restaurant", choices = eucdistCount$Restaurant,
-                                        selected = NULL, multiple = TRUE, options = list(create = FALSE))
+                                        selected = NULL, multiple = TRUE, options = list(create = FALSE)),
+                         sliderInput("range", label = "Range:",
+                                     min = min(eucdistCount$Count), max = max(eucdistCount$Count),
+                                     value = c(min, max),
+                                     step = 1)
                      )),
     
     # Body content
@@ -603,11 +609,15 @@ ui <- dashboardPage(
                               h2("Dashboard:"),
                               h3("Select a city from the 'City' drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
                               h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."),
-                              h2("Similarity Tool:"),
+                              h2("Restaurant Lookup:"),
                               h3("Search for and select a restaurant using the 'Restaurant' input box to see the restaurants that are similar. The number of restaurants it is similar to can be found in the 'Count' column. You can search for multiple restaurants, and can delete a selected restaurant by clicking on it and pressing the 'backspace' button."),
-                              h3("Click on the arrows next to the column names to sort in alphabetical/numerical order.")),
+                              h3("Click on the arrows next to the column names to sort in alphabetical/numerical order."),
+                              h2("Similarity Tool:"),
+                              h3("Using the range slider, you can filter the available restaurants based on the number of restaurants they are similar to (the 'Count' column). The 'Count' column is color-coded, whereby the color red indicates a lower number of similar restaurants, and the color green indicates a higher number of similar restaurants.")),
+                      tabItem(tabName = "restlookup",
+                              DT::dataTableOutput("distTable")),
                       tabItem(tabName = "simtool",
-                              DT::dataTableOutput("distTable"))
+                              DT::dataTableOutput("similarityFeature"))
                   )))
 
 
@@ -678,6 +688,20 @@ server <- function(input, output){
         
     )
     
+    counter <- reactive({
+        distCount <- eucdistCount[,1:3]
+        
+        if(!is.null(input$range)){distCount <- distCount %>% filter(Count %in% input$range[1]:input$range[2])}
+        
+        return(distCount)
+    })
+    
+    output$similarityFeature <- DT::renderDataTable({
+        datatable(counter()) %>% 
+            formatStyle("Count",
+                        backgroundColor = styleInterval(c(5, 13, 22, max(eucdistCount$Count)), c("#FF0000", "#FFC200", "#CAFF00", "#33FF00", "#F500FF")))
+    })
+    
     output$oyster <- renderImage({
         return(list(src = "./appCode/www/oyster.png", contentType = "image/png", height = "auto", width = "230px"))
     }, deleteFile = FALSE)
@@ -685,5 +709,4 @@ server <- function(input, output){
 }
 
 shinyApp(ui = ui, server = server)
-
 
