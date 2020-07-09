@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(leaflet)
 library(dplyr)
+library(ggplot2)
 
 # reading in custom_theme
 custom_theme <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/custom_theme")
@@ -13,6 +14,9 @@ sim_rest_df_nyc <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/p
 # unlike above, we now have no duplicated restaurants in the Similar_Restaurants column (i.e. franchises with same menu)
 # this is the final, and complete df required going forward
 sim_rest_df_noadd <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/sim_rest_df_noadd")
+
+# euclidean distances > 0 and < 0.15
+eucdistCount <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/eucdistCount")
 
 # complete_df_app has addresses needed for map (compatible with 6th deisgn for app)
 complete_df_app <- readRDS("~/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/data/processed/complete_df_app")
@@ -563,5 +567,123 @@ server <- function(input, output){
 
 shinyApp(ui = ui, server = server)
 
+##########################
+
+### 8th design for app ### 
+
+ui <- dashboardPage(
+    dashboardHeader(title = "Sales Forecasting Tool",
+                    titleWidth = 235),
+    
+    # Sidebar content
+    dashboardSidebar(imageOutput("oyster", height = "auto"),
+                     sidebarMenu(
+                         menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                         menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
+                         menuItem("Similarity Tool", tabName = "simtool", icon = icon("chart-bar")),
+                         selectInput("city", label = "City",
+                                     choices = c("Boston", "Portland", "Charleston", "New York City")),
+                         actionButton(inputId = "reset_view", label = "Reset View"),
+                         selectizeInput("restaurant", label = "Restaurant", choices = eucdistCount$Restaurant,
+                                        selected = NULL, multiple = TRUE, options = list(create = FALSE))
+                     )),
+    
+    # Body content
+    dashboardBody(custom_theme,
+                  tags$head(tags$style(HTML('
+                                            /* logo */
+                                            .skin-blue .main-header .logo {
+                                            color: #01244a;
+                                            }'))),
+                  tabItems(
+                      tabItem(tabName = "dashboard",
+                              fluidRow(box(width = 12, leafletOutput(outputId = "mymap", height = 875)))),
+                      tabItem(tabName = "appinfo",
+                              h1("App Instructions"),
+                              h2("Dashboard:"),
+                              h3("Select a city from the 'City' drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
+                              h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."),
+                              h2("Similarity Tool:"),
+                              h3("Search for and select a restaurant using the 'Restaurant' input box to see the restaurants that are similar. The number of restaurants it is similar to can be found in the 'Count' column. You can search for multiple restaurants, and can delete a selected restaurant by clicking on it and pressing the 'backspace' button."),
+                              h3("Click on the arrows next to the column names to sort in alphabetical/numerical order.")),
+                      tabItem(tabName = "simtool",
+                              DT::dataTableOutput("distTable"))
+                  )))
+
+
+server <- function(input, output){
+    v <- reactiveValues()
+    
+    observeEvent(input$reset_view, {
+        v$lng <- -75
+        v$lat <- 38
+        v$zoom <- 6
+    })
+    
+    observeEvent(input$city, {
+        v$lng <- if(input$city == "Boston") {
+            -71.05
+        } else if(input$city == "Portland") {
+            -70.25
+        } else if(input$city == "Charleston") {
+            -79.92
+        } else if(input$city == "New York City") {
+            -73.87
+        }
+        
+        v$lat <- if(input$city == "Boston") {
+            42.35
+        } else if(input$city == "Portland") {
+            43.65
+        } else if(input$city == "Charleston") {
+            32.78
+        } else if(input$city == "New York City") {
+            40.81
+        }
+        
+        v$zoom <- if(input$city == "Boston") {
+            11
+        } else if(input$city == "Portland") {
+            11
+        } else if(input$city == "Charleston") {
+            11
+        } else if(input$city == "New York City") {
+            11
+        }
+    })
+    
+    output$mymap <- renderLeaflet({
+        sim_rest_df_noadd %>%
+            leaflet() %>%
+            addTiles() %>%
+            setView(v$lng, v$lat, v$zoom) %>%
+            addMarkers(clusterOptions = markerClusterOptions(), 
+                       popup = paste("<b> Restaurant Name: </b>", sim_rest_df_noadd$Restaurant, "<br>",
+                                     "<b> Type: </b>", sim_rest_df_noadd$Cuisine, "<br>",
+                                     "<b> Address: </b>", sim_rest_df_noadd$Address, "<br>",
+                                     "<b> Most Similar Restaurants: </b>", sim_rest_df_noadd$Similar_Restaurant))
+    })
+    
+    restaurant <- reactive({
+        distFilter <- eucdistCount
+        
+        if(!is.null(input$restaurant)){distFilter <- distFilter %>% filter(Restaurant %in% input$restaurant)}
+        
+        return(distFilter)
+    })
+    
+    output$distTable <- DT::renderDataTable({
+        restaurant()
+    }
+        
+    )
+    
+    output$oyster <- renderImage({
+        return(list(src = "./appCode/www/oyster.png", contentType = "image/png", height = "auto", width = "230px"))
+    }, deleteFile = FALSE)
+    
+}
+
+shinyApp(ui = ui, server = server)
 
 
