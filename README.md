@@ -21,4 +21,4 @@ Business owners want to reach out to potential customers of their product/servic
 The final output will be an R Shiny application, which features a data frame consisting of each restaurant's most similar restaurants, as well as general information. It will feature various tools that allow the user to look at restaurants based on a variety of characteristics.
 
 ### Results
-![alt text](www/dashboard.gif)
+![](dashboard.gif)
