@@ -2,7 +2,7 @@
 Creating an app that generates a map of restaurants in certain cities, and features a Latent Dirichlet allocation (LDA) model that uses spectral initialization in order to assess which restaurants are most similar to those that a business is currently supplying. 
 
 # Link to App
-
+https://jwvivs.shinyapps.io/Restaurant_App/
 
 # Statement of Work
 Using data from allmenus.com, I will retrieve restaurant menu data, including general information pertaining to the restaurant, and develop a tool that is capable of displaying which restaurants are similar to one another. The tool will use topic modeling to classify the restaurants into different topics based on the contents of their menu.
