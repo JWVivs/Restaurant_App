@@ -6,11 +6,14 @@ library(ggplot2)
 library(DT)
 
 # reading in custom_theme
-custom_theme <- readRDS("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/data/custom_theme")
+file_custom_theme <- file.path("data", "custom_theme")
+custom_theme <- readRDS(file_custom_theme)
 # complete df with top 5 most similar restaurants
-sim_rest_df_noadd <- readRDS("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/data/sim_rest_df_noadd")
+file_sim <- file.path("data", "sim_rest_df_noadd")
+sim_rest_df_noadd <- readRDS(file_sim)
 # euclidean distances > 0 and < 0.15
-eucdistCount <- readRDS("C:/Users/JVivs/Documents/COLLEGE/GRAD SCHOOL/Capstone/Restaurant_App/appCode/data/eucdistCount")
+file_euc <- file.path("data", "eucdistCount")
+eucdistCount <- readRDS(file_euc)
 
 ### final design for app ###
 
