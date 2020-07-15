@@ -1,0 +1,13 @@
+name: Restaurant_App
+title: Restaurant_App
+username:
+account: jwvivs
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2573499
+bundleId: 3394299
+url: https://jwvivs.shinyapps.io/Restaurant_App/
+when: 1594798566.8328
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: custom_theme.R|www/beta.png|www/dashboard.gif|www/gamma.png|www/restaurant_lookup.gif|www/similarity_tool.gif
