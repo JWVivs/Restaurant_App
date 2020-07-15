@@ -106,4 +106,4 @@ custom_theme <- shinyDashboardThemeDIY(
   
 )
 
-saveRDS(custom_theme, file = "./appCode/custom_theme")
+#saveRDS(custom_theme, file = "./appCode/custom_theme")
