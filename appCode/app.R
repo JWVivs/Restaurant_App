@@ -55,7 +55,7 @@ ui <- dashboardPage(
                       tabItem(tabName = "appinfo",
                               h1("App Instructions"),
                               h2("Dashboard:"),
-                              h3("Select a city from the 'City' drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map."),
+                              h3("Select a city from the 'City' drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map. Click on a marker to see information regarding the restaurant, including its 5 most similar restaurants."),
                               h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."),
                               h2("Tools:"),
                               h3("Upon clicking the 'Tools' item, you will discover the two features listed below:"),
