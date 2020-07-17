@@ -18,12 +18,12 @@ eucdistCount <- readRDS(file_euc)
 ### final design for app ###
 
 ui <- dashboardPage(
-    dashboardHeader(title = "Sales Forecasting Tool",
+    dashboardHeader(title = "Restaurant Clustering App",
                     titleWidth = 235),
     
     # Sidebar content
     dashboardSidebar(sidebarMenu(id = "sidebarid",
-                                 menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                                 menuItem("Geocoded Map", tabName = "dashboard", icon = icon("map-marked-alt")),
                                  menuItem("App Info", tabName = "appinfo", icon = icon("info-circle")),
                                  menuItem("Tools", tabname = "tools", icon = icon("toolbox"),
                                           menuSubItem("Restaurant Lookup", tabName = "restlookup", icon = icon("search")),
@@ -54,7 +54,7 @@ ui <- dashboardPage(
                               fluidRow(box(width = 12, leafletOutput(outputId = "mymap", height = 875)))),
                       tabItem(tabName = "appinfo",
                               h1("App Instructions"),
-                              h2("Dashboard:"),
+                              h2("Geocoded Map:"),
                               h3("Select a city from the 'City' drop down menu, and you will be provided with restaurants in the surrounding area. You can zoom in by double-clicking, scrolling, or using the zoom panel in the top-left corner of the map. Click on a marker to see information regarding the restaurant, including its 5 most similar restaurants."),
                               h3("The 'Reset View' button will zoom out and allow you to see the entirety of the data."),
                               h2("Tools:"),
