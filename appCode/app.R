@@ -19,7 +19,7 @@ eucdistCount <- readRDS(file_euc)
 
 ui <- dashboardPage(
     dashboardHeader(title = "Restaurant Clustering App",
-                    titleWidth = 235),
+                    titleWidth = 265),
     
     # Sidebar content
     dashboardSidebar(sidebarMenu(id = "sidebarid",
