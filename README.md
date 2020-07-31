@@ -1,7 +1,7 @@
 # Restaurant Clustering App
 Creating an app that generates a map of restaurants in certain cities, and features a Latent Dirichlet allocation (LDA) model that uses spectral initialization in order to assess which restaurants are most similar to those that a business is currently supplying. 
 
-# Link to App
+# Link to App (Non-Proprietary Tool Analogue)
 https://jwvivs.shinyapps.io/Restaurant_App/
 
 # Statement of Work
